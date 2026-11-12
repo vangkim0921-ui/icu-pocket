@@ -1,0 +1,69 @@
+{
+  "name": "중환자실 지박령",
+  "short_name": "ICU 지박령",
+  "description": "인공호흡기 파형 도감, ICU 진정·진통 선택기, 인공호흡기 이탈(Weaning) 프로토콜을 하나로 묶은 중환자실 임상 학습 도구",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F2F5F6",
+  "theme_color": "#0B6A77",
+  "lang": "ko",
+  "categories": [
+    "medical",
+    "education"
+  ],
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Vent 파형 도감",
+      "url": "./vent/",
+      "icons": [
+        {
+          "src": "vent/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "진정·진통 선택기",
+      "url": "./sedation/",
+      "icons": [
+        {
+          "src": "sedation/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Weaning 프로토콜",
+      "url": "./weaning/",
+      "icons": [
+        {
+          "src": "weaning/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
+}
