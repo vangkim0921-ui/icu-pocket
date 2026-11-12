@@ -1,0 +1,945 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="ICU 진정">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#F2F4F6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#101013" media="(prefers-color-scheme: dark)">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="manifest" href="../manifest.json">
+<title>ICU 진정·진통 선택기</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: 토스형 — 회색 바탕 위 흰 카드, 큰 파란 숫자, 하단 고정 CTA. 모바일 하단 탭바 / PC 상단 탭 */
+:root{
+  --bg:#F2F4F6; --surface:#FFFFFF; --fill:#F2F4F6; --sep:#EEF0F3; --ink:#191F28; --sub:#8B95A1; --faint:#B0B8C1; --body:#4E5968;
+  --tint:#3182F6; --tint-ink:#FFFFFF; --tint-soft:#E8F3FF;
+  --red:#F04452; --red-soft:#FFEEF0; --orange:#E57F00; --orange-soft:#FFF4E5; --green:#03B26C; --green-soft:#E5F8EF;
+  --font:-apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Malgun Gothic", "Noto Sans KR", "Segoe UI", Roboto, sans-serif;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#101013; --surface:#1E1E24; --fill:#2A2A32; --sep:#2C2C35; --ink:#F4F4F6; --sub:#9A9AA5; --faint:#62626C; --body:#C3C3CB;
+  --tint:#4C9AFF; --tint-ink:#FFFFFF; --tint-soft:#1A2B45;
+  --red:#FF6B76; --red-soft:#3A1C21; --orange:#FFB24D; --orange-soft:#3A2A14; --green:#2FD48E; --green-soft:#123326; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#101013; --surface:#1E1E24; --fill:#2A2A32; --sep:#2C2C35; --ink:#F4F4F6; --sub:#9A9AA5; --faint:#62626C; --body:#C3C3CB;
+  --tint:#4C9AFF; --tint-ink:#FFFFFF; --tint-soft:#1A2B45;
+  --red:#FF6B76; --red-soft:#3A1C21; --orange:#FFB24D; --orange-soft:#3A2A14; --green:#2FD48E; --green-soft:#123326; color-scheme:dark }
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.45;margin:0;-webkit-font-smoothing:antialiased;letter-spacing:-0.01em}
+button,input,select{font:inherit;color:inherit;letter-spacing:inherit}
+.tnum{font-variant-numeric:tabular-nums}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--bg)}
+
+/* ---- nav ---- */
+.nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);
+  padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
+.nav-in{max-width:1180px;margin:0 auto;min-height:54px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.brand{display:flex;flex-direction:column;line-height:1.25;min-width:0}
+.brand b{font-size:15px;font-weight:700}
+.brand span{font-size:12px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.segtabs{display:flex;background:var(--surface);border-radius:14px;padding:4px;gap:4px}
+.segtabs button{border:0;background:transparent;border-radius:10px;padding:8px 18px;font-size:14px;font-weight:700;color:var(--sub);cursor:pointer;white-space:nowrap}
+.segtabs button[aria-selected="true"]{background:var(--tint);color:#fff}
+@media (max-width:779px){.nav .segtabs{display:none}}
+
+.tabbar{display:none}
+@media (max-width:779px){
+  .tabbar{display:grid;grid-template-columns:1fr 1fr;position:fixed;left:0;right:0;bottom:0;z-index:25;background:var(--surface);
+    border-top:1px solid var(--sep);border-radius:20px 20px 0 0;box-shadow:0 -4px 20px rgba(0,0,0,.05);
+    padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px)}
+  .tabbar button{border:0;background:transparent;display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 0 8px;font-size:11px;font-weight:600;color:var(--faint);cursor:pointer}
+  .tabbar button svg{width:24px;height:24px}
+  .tabbar button[aria-selected="true"]{color:var(--ink)}
+  .page{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+}
+
+.page{max-width:1180px;margin:0 auto;padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:max(14px,env(safe-area-inset-right,0px));padding-block:6px 40px}
+.large{font-size:26px;font-weight:800;letter-spacing:-0.03em;margin:6px 8px 4px;text-wrap:balance}
+.lede{color:var(--sub);font-size:14px;margin:0 8px 14px;max-width:62ch}
+
+.cols{display:grid;grid-template-columns:minmax(0,1fr);gap:0 20px;align-items:start}
+@media (min-width:980px){.cols{grid-template-columns:minmax(0,420px) minmax(0,1fr)}}
+.col{min-width:0}
+
+/* ---- cards ---- */
+.gh{font-size:15px;font-weight:700;color:var(--ink);margin:22px 8px 8px}
+.gh:first-child{margin-top:6px}
+.group{background:var(--surface);border-radius:22px;overflow:hidden;padding:6px 0}
+.gf{font-size:12.5px;color:var(--sub);margin:8px 10px 0;line-height:1.45}
+.cell{display:flex;align-items:center;gap:12px;padding:12px 20px;min-height:52px;position:relative}
+.cell .lbl{flex:1;min-width:0;font-size:16px;font-weight:600}
+.cell .lbl small{display:block;color:var(--sub);font-size:13px;font-weight:500}
+.cell input[type=number]{width:100px;text-align:right;border:0;background:var(--fill);border-radius:12px;padding:10px 12px;font-size:17px;font-weight:700;font-variant-numeric:tabular-nums}
+.cell input[type=number]:focus{outline:2px solid var(--tint);outline-offset:0}
+.unit{color:var(--sub);font-size:15px;width:26px;font-weight:600}
+.cellcol{display:flex;flex-direction:column;gap:10px;padding:14px 20px;position:relative}
+.cellcol .lbl{font-size:16px;font-weight:600}
+
+/* segmented */
+.seg{display:flex;background:var(--fill);border-radius:12px;padding:4px;gap:4px}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg label{flex:1 1 0;text-align:center;padding:9px 6px;border-radius:9px;font-size:14.5px;font-weight:700;color:var(--sub);cursor:pointer;line-height:1.25;min-width:0}
+.seg input:checked + label{background:var(--surface);color:var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.seg input:focus-visible + label{outline:2px solid var(--tint);outline-offset:1px}
+.segnote{font-size:13px;color:var(--sub)}
+.wtline{font-size:13px;color:var(--sub)}
+.wtline b{color:var(--ink);font-weight:700}
+
+/* switch */
+.sw{appearance:none;-webkit-appearance:none;width:50px;height:30px;border-radius:999px;background:var(--fill);position:relative;flex:none;cursor:pointer;transition:background .18s;border:0;margin:0}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:transform .18s}
+.sw:checked{background:var(--tint)}
+.sw:checked::after{transform:translateX(20px)}
+.sw:focus-visible{outline:2px solid var(--tint);outline-offset:2px}
+
+/* ---- results ---- */
+.summary{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sumcard{border:0;text-align:left;background:var(--surface);color:var(--ink);border-radius:22px;padding:18px 18px 16px;cursor:pointer;display:flex;flex-direction:column;gap:1px;min-width:0}
+.sumcard[disabled]{cursor:default}
+.sumcard .k{font-size:13.5px;font-weight:600;color:var(--sub)}
+.sumcard .n{font-size:18px;font-weight:700;line-height:1.25;overflow-wrap:anywhere;margin-top:1px}
+.sumcard .v{font-size:36px;font-weight:800;letter-spacing:-0.035em;color:var(--tint);margin-top:8px;line-height:1.05;font-variant-numeric:tabular-nums}
+.sumcard .v small{font-size:16px;font-weight:700;margin-left:2px;letter-spacing:-0.01em}
+.sumcard .r{font-size:13.5px;color:var(--sub);font-weight:500;margin-top:3px;font-variant-numeric:tabular-nums}
+.sumcard[disabled] .v{color:var(--sub);font-size:22px}
+.sumcard:focus-visible{outline:3px solid var(--tint);outline-offset:2px}
+@media (hover:hover){.sumcard:not([disabled]):hover{box-shadow:0 0 0 2px var(--tint) inset}}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:12px 4px 0}
+.chip{font-size:13px;font-weight:600;padding:7px 12px;border-radius:999px;background:var(--surface);color:var(--body)}
+.chip.on{background:var(--tint-soft);color:var(--tint)}
+
+.rowbtn{display:flex;align-items:center;gap:12px;width:100%;border:0;background:transparent;text-align:left;padding:14px 20px;cursor:pointer;position:relative}
+.rowbtn + .rowbtn::before,.plain + .rowbtn::before{content:"";position:absolute;top:0;left:20px;right:20px;border-top:1px solid var(--sep)}
+.rowbtn:active{background:var(--fill)}
+@media (hover:hover){.rowbtn:hover{background:var(--fill)}}
+.rowbtn:focus-visible{outline:2px solid var(--tint);outline-offset:-2px}
+.rmain{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.rtitle{display:flex;align-items:center;gap:7px;flex-wrap:wrap;font-size:17px;font-weight:700}
+.rtitle .br{font-size:13.5px;font-weight:500;color:var(--sub)}
+.badge{font-size:11.5px;font-weight:700;padding:3px 7px;border-radius:6px;background:var(--tint-soft);color:var(--tint)}
+.badge.two{background:var(--fill);color:var(--body)}
+.badge.ctrl{background:var(--red-soft);color:var(--red)}
+.badge.na{background:var(--orange-soft);color:var(--orange)}
+.rsub{font-size:13.5px;color:var(--sub);line-height:1.4}
+.rsub.when{color:var(--tint);font-weight:600}
+.rwhy{margin:2px 0 0;padding:0 0 0 16px;font-size:13.5px;color:var(--body);line-height:1.5}
+.rwhy li{margin:1px 0}
+.rval{text-align:right;flex:none;font-variant-numeric:tabular-nums;line-height:1.2;font-size:13px;color:var(--tint);font-weight:700}
+.rval b{font-size:20px;font-weight:800;letter-spacing:-0.02em}
+.rval span{font-size:12.5px;color:var(--sub);display:block;font-weight:500;margin-top:2px}
+.chev{color:var(--faint);font-size:22px;flex:none;margin-left:-4px;font-weight:300}
+.plain{padding:14px 20px;position:relative;display:flex;flex-direction:column;gap:3px}
+.plain + .plain::before,.rowbtn + .plain::before{content:"";position:absolute;top:0;left:20px;right:20px;border-top:1px solid var(--sep)}
+.plain .t{font-weight:700;font-size:16px}
+.plain .t small{font-weight:500;color:var(--sub);font-size:13px;margin-left:6px}
+.plain .d{font-size:14px;font-variant-numeric:tabular-nums;font-weight:600;color:var(--body)}
+.plain .r{font-size:13.5px;color:var(--sub)}
+.plain .c{font-size:13px;color:var(--orange);font-weight:600}
+.plain.bad .t{color:var(--red)}
+.mon{display:grid;grid-template-columns:72px minmax(0,1fr);gap:12px;align-items:start}
+.mon .k{font-size:12.5px;font-weight:700;color:var(--green);background:var(--green-soft);border-radius:8px;padding:4px 6px;text-align:center}
+.mon .v{font-size:14px;color:var(--body)}
+.foot{font-size:12.5px;color:var(--sub);margin:28px 8px 0;display:flex;flex-direction:column;gap:6px}
+.foot p{margin:0;max-width:100ch}
+.foot b{color:var(--body)}
+
+/* ---- detail ---- */
+.sheet{position:fixed;inset:0;z-index:50;background:var(--bg);overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.sbar{position:sticky;top:0;z-index:2;background:var(--bg);
+  padding-top:env(safe-area-inset-top,0px);padding-left:max(6px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.sbar-in{max-width:720px;margin:0 auto;min-height:52px;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:8px}
+.back{border:0;background:transparent;color:var(--ink);font-size:16px;font-weight:600;cursor:pointer;padding:10px 10px;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.back svg{width:11px;height:19px}
+.back:focus-visible{outline:2px solid var(--tint);border-radius:8px}
+.stitle{font-size:16px;font-weight:700;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.sbody{max-width:720px;margin:0 auto;padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:max(14px,env(safe-area-inset-right,0px));padding-block:6px 24px}
+.dhead{display:flex;flex-direction:column;gap:6px;margin:4px 8px 6px}
+.dtags{display:flex;flex-wrap:wrap;gap:6px}
+.dname{font-size:28px;font-weight:800;letter-spacing:-0.035em;line-height:1.2;margin:2px 0 0}
+.dname span{font-size:16px;font-weight:600;color:var(--sub);margin-left:8px;letter-spacing:-0.01em}
+.dmeta{font-size:14px;color:var(--sub)}
+.big3{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:16px}
+.tile{background:var(--surface);border-radius:22px;padding:18px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.tile .k{font-size:13.5px;font-weight:600;color:var(--sub)}
+.tile .v{font-size:40px;font-weight:800;letter-spacing:-0.04em;line-height:1.1;font-variant-numeric:tabular-nums;color:var(--tint);margin-top:6px}
+.tile .v small{font-size:17px;font-weight:700;margin-left:3px;letter-spacing:-0.01em}
+.tile .s{font-size:14px;font-variant-numeric:tabular-nums;color:var(--body);font-weight:600}
+.tile.max .v{color:var(--red)}
+.tile.wide{grid-column:1/-1}
+.tile.wide .s{font-size:15.5px;font-weight:600;color:var(--ink);margin-top:2px;line-height:1.45}
+.order{background:var(--surface);border-radius:22px;padding:18px 20px;margin-top:10px;display:flex;flex-direction:column;gap:8px}
+.order-h b{font-size:13.5px;font-weight:600;color:var(--sub)}
+.order pre{margin:0;font:600 15.5px/1.7 var(--font);white-space:pre-wrap;word-break:keep-all;overflow-wrap:anywhere;color:var(--ink)}
+.cta{position:sticky;bottom:0;z-index:3;padding:14px 0 calc(14px + env(safe-area-inset-bottom,0px));background:linear-gradient(to bottom, transparent, var(--bg) 30%)}
+.copy{display:block;width:100%;border:0;background:var(--tint);color:#fff;border-radius:16px;padding:17px;font-size:16.5px;font-weight:700;cursor:pointer}
+.copy:active{filter:brightness(.92)}
+.copy:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.tablewrap{overflow-x:auto}
+table.rate{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:15.5px}
+table.rate th,table.rate td{padding:12px 20px;text-align:right}
+table.rate tbody tr + tr td{border-top:1px solid var(--sep)}
+table.rate thead th{font-size:13px;color:var(--sub);font-weight:600}
+table.rate th:first-child,table.rate td:first-child{text-align:left}
+table.rate td{font-weight:600;color:var(--body)}
+table.rate td.cc{font-weight:800;color:var(--tint)}
+table.rate tr.is-start td{background:var(--tint-soft)}
+table.rate tr.is-max td{background:var(--red-soft)}
+table.rate tr.is-max td.cc{color:var(--red)}
+.mk{font-size:11.5px;font-weight:700;margin-left:8px;padding:2px 7px;border-radius:6px;background:var(--surface);color:var(--ink)}
+.blist{margin:0;padding:10px 20px 10px 38px;font-size:14.5px;display:flex;flex-direction:column;gap:6px;color:var(--body)}
+.nlist{margin:0;padding:4px 0;list-style:none}
+.nlist li{padding:12px 20px;font-size:14.5px;position:relative;color:var(--body)}
+.nlist li + li::before{content:"";position:absolute;top:0;left:20px;right:20px;border-top:1px solid var(--sep)}
+.nlist li b{color:var(--orange)}
+.mixv{font-size:15px;font-weight:600}
+.mixv.custom{color:var(--orange)}
+.astep{font-variant-numeric:tabular-nums}
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="nav-in">
+    <div class="brand"><b>ICU 진정·진통</b><span>인제대학교 일산백병원 호흡기내과</span></div>
+    <div class="segtabs" role="tablist" aria-label="화면">
+      <button type="button" role="tab" data-tab="rec" aria-selected="true">진정·진통 추천</button>
+      <button type="button" role="tab" data-tab="lib" aria-selected="false">병원 주입표</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="page" id="view-rec">
+    <h1 class="large">진정·진통 추천</h1>
+    <p class="lede">환자 상태를 고르면 1차·2차 약과 시작·최대 cc/hr가 바로 바뀌어. 약을 누르면 간호사 지시문이 나와.</p>
+    <div class="cols">
+      <div class="col" id="inputs"></div>
+      <div class="col" id="out" aria-live="polite"></div>
+    </div>
+    <div class="foot">
+      <p><b>제작</b> 인제대학교 일산백병원 호흡기내과 · <b>Mix</b> 일산백병원 ICU 주입 차트 기준</p>
+      <p><b>근거</b> PADIS 2018 (Crit Care Med) · PADIS focused update 2025 (Crit Care Med) · KSCCM 2021 (Acute Crit Care) · MENDS · SEDCOM · MIDEX/PRODEX · SPICE III · MENDS2 · A2B (JAMA 2025) · Van Gelder 2024 · Huespe 2024 · DEMEL 2025 · SSC 2021</p>
+      <p>교육·참고용 계산기야. 최종 용량은 기관 프로토콜과 환자 반응을 보고 적정해.</p>
+    </div>
+  </section>
+
+  <section class="page" id="view-lib" hidden>
+    <h1 class="large">병원 주입표</h1>
+    <p class="lede">일산백병원 ICU 주입 차트를 체중으로 바로 계산해. 약을 누르면 mix 방법, 속도표, 지시문이 나와.</p>
+    <div id="lib"></div>
+  </section>
+</main>
+
+<nav class="tabbar" role="tablist" aria-label="화면">
+  <button type="button" role="tab" data-tab="rec" aria-selected="true">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c0 0-6 7-6 11a6 6 0 0 0 12 0c0-4-6-11-6-11z"/><path d="M8.5 14.5h2l1-2 1.5 4 1-2h1.5"/></svg>
+    진정·진통 추천</button>
+  <button type="button" role="tab" data-tab="lib" aria-selected="false">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2.5"/><path d="M8 8h8M8 12h8M8 16h5"/></svg>
+    병원 주입표</button>
+</nav>
+
+<div class="sheet" id="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="s-title"></div>
+
+<script>
+(function(){
+const STORE = 'sedalgo-conc-v3';
+/* ===== 일산백병원 ICU 주입 차트 기준 mix (진정·진통·근이완) ===== */
+const DRUGS = {
+  dex:          {name:'Dexmedetomidine', brand:'Precedex', ctrl:'', unit:'mcg/kg/hr', mass:'mcg', conc:4, cu:'mcg/mL', perH:(x,W)=>x*W,
+                 mix:'Precedex 200 mcg/2 mL + N/S 48 mL = 50 mL', hosp:true, step:'30분마다 0.1 mcg/kg/hr씩 증량', steps:[0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0,1.2,1.4]},
+  propofol:     {name:'Propofol', brand:'Fresofol MCT 2%', ctrl:'향정', unit:'mg/kg/hr', mass:'mg', conc:20, cu:'mg/mL', perH:(x,W)=>x*W,
+                 mix:'Fresofol MCT 2% 1,000 mg/50 mL 원액', hosp:true, step:'5–10분마다 0.3 mg/kg/hr씩 증량', steps:[0.3,0.5,0.8,1,1.5,2,2.5,3,4,6,8,10]},
+  fentanyl:     {name:'Fentanyl', brand:'', ctrl:'마약', unit:'mcg/kg/hr', mass:'mcg', conc:10, cu:'mcg/mL', perH:(x,W)=>x*W,
+                 mix:'Fentanyl 500 mcg/10 mL × 4A + 5% D/W 160 mL = 200 mL', hosp:true, step:'통증 점수 보며 30–60분마다 0.5 mcg/kg/hr씩 증량', steps:[0.5,0.7,1,1.5,2,3,4,5,7,10]},
+  remifentanil: {name:'Remifentanil', brand:'Ultiva', ctrl:'마약', unit:'mcg/kg/min', mass:'mcg', conc:50, cu:'mcg/mL', perH:(x,W)=>x*W*60,
+                 mix:'Ultiva 5 mg 1V + 5% D/W 100 mL', hosp:true, step:'5–10분마다 0.025–0.05 mcg/kg/min씩 증량', steps:[0.05,0.1,0.15,0.2,0.25,0.3,0.4,0.5,0.75]},
+  cisatracurium:{name:'Cisatracurium', brand:'Nimbex', ctrl:'', unit:'mcg/kg/min', mass:'mg', conc:1, cu:'mg/mL', perH:(x,W)=>x*W*60/1000,
+                 mix:'Nimbex 20 mg/10 mL × 2A + N/S 20 mL = 40 mL', hosp:true, step:'0.5–1 mcg/kg/min씩 조절', steps:[0.5,1,1.5,2,3,4,5,7,10]},
+  midazolam:    {name:'Midazolam', brand:'', ctrl:'향정', unit:'mg/kg/hr', mass:'mg', conc:1, cu:'mg/mL', perH:(x,W)=>x*W,
+                 mix:'차트 미등록 — 예: midazolam 50 mg + N/S = 50 mL', hosp:false, step:'30분마다 0.02 mg/kg/hr씩 증량', steps:[0.02,0.04,0.05,0.06,0.08,0.1,0.2,0.4,1,2]},
+  ketamine:     {name:'Ketamine', brand:'', ctrl:'향정', unit:'mg/kg/hr', mass:'mg', conc:2, cu:'mg/mL', perH:(x,W)=>x*W,
+                 mix:'차트 미등록 — 예: ketamine 100 mg + N/S = 50 mL', hosp:false, step:'30–60분마다 0.05 mg/kg/hr씩 증량', steps:[0.05,0.1,0.2,0.3,0.4,0.5,1,2,3,5]},
+  hydromorphone:{name:'Hydromorphone', brand:'', ctrl:'마약', unit:'mg/hr', mass:'mg', conc:0.2, cu:'mg/mL', perH:(x)=>x,
+                 mix:'차트 미등록 — 예: hydromorphone 10 mg + N/S = 50 mL', hosp:false, step:'1시간마다 0.5 mg/hr씩 증량', steps:[0.5,1,1.5,2,2.5,3]},
+};
+/* ===== 승압제 · 강심제 (체중 기반 500 mL mix, 차트 공식) ===== */
+const VASO = {
+  norepinephrine:{name:'Norepinephrine', alias:'놀핀', ampMg:4, ampMl:4, ampTxt:'4 mg/4 mL', diluent:'5% D/W', unit:'mcg/kg/min', hosp:true,
+    strengths:[['s','Single',0.3],['d','Double',0.6],['q','Double×2',1.2]], ruleDose:0.01,
+    start:0.05, max:1, steps:[0.01,0.02,0.03,0.05,0.08,0.1,0.15,0.2,0.25,0.3,0.4,0.5,0.75,1],
+    step:'5–15분마다 0.02–0.05 mcg/kg/min씩 조절', target:'목표 MAP ≥ 65 mmHg',
+    why:['패혈성 쇼크 1차 승압제 (SSC 2021)'],
+    notes:['0.25–0.5 mcg/kg/min 넘으면 vasopressin 추가 고려', '수액 제한 환자는 Double·Double×2로 용량 줄이기', '가능하면 중심정맥 — 말초는 근위부 굵은 정맥에서 단기간']},
+  epinephrine:{name:'Epinephrine', alias:'에피', ampMg:1, ampMl:1, ampTxt:'1 mg/1 mL', diluent:'5% D/W', unit:'mcg/kg/min', hosp:true,
+    strengths:[['s','Single',0.3],['d','Double',0.6],['q','Double×2',1.2]], ruleDose:0.01,
+    start:0.02, max:0.5, steps:[0.01,0.02,0.03,0.05,0.08,0.1,0.15,0.2,0.3,0.4,0.5],
+    step:'5–15분마다 0.01–0.02 mcg/kg/min씩 조절', target:'목표 MAP ≥ 65 mmHg',
+    why:['NE에 반응 부족할 때 추가 (SSC 2021) · 아나필락시스 쇼크'],
+    notes:['β2 작용으로 lactate 상승 — 젖산 청소율 해석 주의', '빈맥 · 부정맥']},
+  dopamine:{name:'Dopamine', alias:'도파', ampMg:200, ampMl:5, ampTxt:'200 mg/5 mL', diluent:'N/S', unit:'mcg/kg/min', hosp:true,
+    strengths:[['s','표준',30]], ruleDose:1,
+    start:5, max:20, steps:[2,3,5,7.5,10,12.5,15,17.5,20],
+    step:'5–10분마다 2.5 mcg/kg/min씩 조절', target:'목표 MAP ≥ 65 · HR 확인',
+    why:['서맥 동반 저혈압 등 제한적 상황'],
+    notes:['NE 대비 부정맥 ↑ — 패혈성 쇼크 1차로 비추천 (SOAP II)', '저용량 "신보호" 효과 없음']},
+  dobutamine:{name:'Dobutamine', alias:'도부', ampMg:250, ampMl:5, ampTxt:'250 mg/5 mL', diluent:'N/S', unit:'mcg/kg/min', hosp:true,
+    strengths:[['s','표준',30]], ruleDose:1,
+    start:2.5, max:20, steps:[2.5,5,7.5,10,12.5,15,17.5,20],
+    step:'10–15분마다 2.5 mcg/kg/min씩 조절', target:'목표 심박출 · ScvO₂ · lactate 개선',
+    why:['심근기능 저하로 관류 부족한 쇼크 — 승압제에 추가'],
+    notes:['혈관확장으로 저혈압 악화 가능 — NE 병용', '빈맥 · 부정맥']},
+};
+
+let conc = {};
+try { conc = JSON.parse(localStorage.getItem(STORE) || '{}') || {}; } catch(e) { conc = {}; }
+const getC = (k, def) => (conc[k] > 0 ? conc[k] : def);
+const getConc = k => getC(k, DRUGS[k].conc);
+function setC(k, v){ if (v > 0) conc[k] = v; else delete conc[k]; try { localStorage.setItem(STORE, JSON.stringify(conc)); } catch(e) {} }
+
+const GROUPS = [
+  {head:'진정 목표 · 기간', fields:[
+    {id:'target', label:'진정 목표', def:'light', opts:[['light','Light','RASS 0 ~ −2'],['deep','Deep','RASS −3 ~ −5 · 중증 ARDS dyssynchrony, 근이완, ICP 조절, 경련중첩']]},
+    {id:'duration', label:'예상 인공호흡 기간', def:'long', opts:[['short','72시간 미만','수술 후 · 단기 MV'],['long','72시간 이상','ARDS · 패혈증 등']]},
+  ]},
+  {head:'혈역학', fields:[
+    {id:'hemo', label:'승압제', def:'stable', opts:[['stable','없음','혈역학 안정'],['low','저용량','NE ≤ 0.1 mcg/kg/min'],['high','고용량','NE > 0.1 또는 2제 이상']]},
+    {id:'hr', label:'심박 · 전도', def:'ok', opts:[['ok','정상',''],['brady','서맥 · AVB','HR < 50 · 2–3도 AV block']]},
+  ]},
+  {head:'장기 기능', fields:[
+    {id:'renal', label:'신기능', def:'normal', opts:[['normal','정상',''],['impaired','CrCl < 30','AKI · CKD'],['crrt','CRRT','']]},
+    {id:'hepatic', label:'간기능', def:'normal', opts:[['normal','정상',''],['severe','중증 저하','Child-Pugh C · ALF']]},
+  ]},
+  {head:'통증', fields:[
+    {id:'pain', label:'통증 평가', def:'modsev', opts:[['none','없음','CPOT 0 · BPS 3'],['mild','경도','NRS 1–3 · CPOT ≤ 2'],['modsev','중등도↑','NRS ≥ 4 · CPOT > 2 · BPS > 5']]},
+  ]},
+];
+const FLAGS = [
+  ['delirium','섬망','CAM-ICU 양성'],
+  ['extub','발관 임박 · NIV',''],
+  ['elderly','65세 초과',''],
+  ['neuro','잦은 신경학적 평가',''],
+  ['nmb','근이완제 필요 · 사용 중',''],
+  ['seizure','경련중첩증',''],
+  ['withdrawal','알코올 · BZD 금단 위험',''],
+  ['opioidTol','만성 opioid 사용',''],
+  ['bronchospasm','기관지경련',''],
+  ['neuropathic','신경병증성 통증','GBS 등'],
+  ['tg','고중성지방혈증 · 췌장염',''],
+  ['bleeding','출혈 · 혈소판감소',''],
+];
+
+/* ---------- build inputs ---------- */
+const inputs = document.getElementById('inputs');
+let html = `<div class="gh">환자</div><div class="group">
+  <div class="cell"><span class="lbl">성별</span><div class="seg" style="width:140px"><input type="radio" name="sex" id="sex-M" value="M" checked><label for="sex-M">남</label><input type="radio" name="sex" id="sex-F" value="F"><label for="sex-F">여</label></div></div>
+  <div class="cell"><label class="lbl" for="height">키</label><input id="height" type="number" inputmode="decimal" min="120" max="220" value="170"><span class="unit">cm</span></div>
+  <div class="cell"><label class="lbl" for="weight">체중</label><input id="weight" type="number" inputmode="decimal" min="25" max="250" value="70"><span class="unit">kg</span></div>
+</div><div class="gf wtline" id="wt"></div>`;
+GROUPS.forEach(g=>{
+  html += `<div class="gh">${g.head}</div><div class="group">`;
+  g.fields.forEach(f=>{
+    html += `<div class="cellcol" role="radiogroup" aria-label="${f.label}"><span class="lbl">${f.label}</span><div class="seg">`;
+    f.opts.forEach(([v,b])=>{ const id = `${f.id}-${v}`; html += `<input type="radio" name="${f.id}" id="${id}" value="${v}" ${v===f.def?'checked':''}><label for="${id}">${b}</label>`; });
+    html += `</div><span class="segnote" id="note-${f.id}"></span></div>`;
+  });
+  html += `</div>`;
+});
+html += `<div class="gh">특수 상황</div><div class="group">`;
+FLAGS.forEach(([k,l,s])=>{ html += `<div class="cell"><label class="lbl" for="flag-${k}">${l}${s?`<small>${s}</small>`:''}</label><input class="sw" type="checkbox" id="flag-${k}" role="switch"></div>`; });
+html += `</div>`;
+inputs.innerHTML = html;
+
+/* ---------- helpers ---------- */
+function fmt(n){
+  if(!isFinite(n)) return '–';
+  const a = Math.abs(n);
+  const d = a >= 100 ? 0 : a >= 1 ? 1 : a >= 0.1 ? 2 : 3;
+  return Number(n.toFixed(d)).toLocaleString('ko-KR',{maximumFractionDigits:d});
+}
+const esc = s => String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const strip = s => String(s).replace(/<[^>]+>/g,'');
+function readState(){
+  const s = {flags:{}};
+  s.sex = (inputs.querySelector('input[name="sex"]:checked')||{}).value || 'M';
+  s.height = parseFloat(document.getElementById('height').value) || 170;
+  s.weight = parseFloat(document.getElementById('weight').value) || 70;
+  GROUPS.forEach(g=>g.fields.forEach(f=>{ const el = inputs.querySelector(`input[name="${f.id}"]:checked`); s[f.id] = el ? el.value : f.def; }));
+  FLAGS.forEach(([k])=>{ s.flags[k] = document.getElementById('flag-'+k).checked; });
+  return s;
+}
+function weights(s){
+  const base = s.sex === 'M' ? 50 : 45.5;
+  const ibw = Math.max(30, base + 0.91*(s.height - 152.4));
+  const tbw = s.weight;
+  let W, how;
+  if (tbw <= ibw) { W = tbw; how = '실체중'; }
+  else if (tbw > 1.2*ibw) { W = ibw + 0.4*(tbw - ibw); how = '보정체중'; }
+  else { W = tbw; how = '실체중'; }
+  return {ibw, tbw, W, how, bmi: tbw/Math.pow(s.height/100,2)};
+}
+
+/* ---------- decision logic ---------- */
+function plan(s, W){
+  const f = s.flags;
+  const highP = s.hemo === 'high', lowP = s.hemo === 'low';
+  const renalBad = s.renal !== 'normal', hepBad = s.hepatic === 'severe';
+  const brady = s.hr === 'brady';
+  const r = {analg:null, analgAlt:[], sed:null, sedAlt:[], nmb:null, adj:[], avoid:[], mon:[]};
+
+  const fentBolus = `${fmt(0.35*W)}–${fmt(0.5*W)} mcg IV q30–60분 PRN (0.35–0.5 mcg/kg) = ${fmt(0.35*W/getConc('fentanyl'))}–${fmt(0.5*W/getConc('fentanyl'))} cc`;
+  const fentanylRec = (start, when, extraWhy=[]) => ({key:'fentanyl', kind:'analg', start, min:Math.min(start,0.7), max:10, bolus:fentBolus, when,
+    why:[...extraWhy, '등가: fentanyl 100 mcg ≈ morphine 10 mg · onset 1–2분, 반감기 2–4h', 'Histamine 유리 거의 없어 혈역학 영향 적음'],
+    notes:['2시간 넘게 주입하면 CSHT 급증(10h에 300분 이상) — 장기 주입 후 각성 지연은 <b>축적</b>부터 의심',
+           ...((renalBad||hepBad) ? ['간·신부전에서 축적 — 저용량 시작, 매일 감량 시도'] : [])]});
+  const remiStart = (lowP || f.elderly) ? 0.05 : 0.1;
+  const remiRec = (when, extraWhy=[]) => ({key:'remifentanil', kind:'analg', start:remiStart, min:0.05, max:0.75, when,
+    bolus:'Bolus 금지 — 흉벽강직 · 서맥 · 무호흡',
+    why:[...extraWhy, '혈중·조직 esterase 대사 — 간·신기능 무관', 'CSHT 약 4분, 주입 시간과 무관'],
+    notes:['<b>중단 30–60분 전</b> 대체 진통제(acetaminophen, fentanyl bolus·주입, 저용량 ketamine) 깔아두기 — 반동통증·OIH 예방',
+           '병원 프로토콜: 0.1–0.15 시작, 최대 0.75 mcg/kg/min' + (remiStart===0.05 ? ' — 승압제·고령이라 0.05부터 시작' : ''),
+           '3일 넘으면 급성 tolerance로 용량 상승 — fentanyl 전환 고려',
+           'Propofol과 병용 시 저혈압·서맥 상승작용']});
+  const hydroRec = (when) => ({key:'hydromorphone', kind:'analg', start:0.5, min:0.5, max:3, when,
+    bolus:'0.2–0.6 mg IV q1–2h PRN',
+    why:['등가: 1.5 mg ≈ morphine 10 mg · onset 5–15분, 반감기 2–3h', 'Fentanyl보다 지용성 낮아 지방조직 축적이 적음'],
+    notes:['Fentanyl에서 전환 시 교차내성 불완전 — 계산된 등가용량의 50–75%로 시작',
+           ...(renalBad ? ['신부전: 대사산물 H3G 축적 — 근간대·신경흥분 관찰'] : []),
+           '병원 표준 mix 없음 — 조제 농도 확인 후 사용']});
+  const propNotes = (lightMax)=>{
+    const n = [`<b>PRIS 임계</b> 4 mg/kg/hr × 48h 이상 = ${fmt(4*W)} mg/hr · ${fmt(4*W/getConc('propofol'))} cc/hr — 넘기면 TG·CK·lactate 확인`,
+               '지질 열량 — 영양 계산에 포함'];
+    if (lightMax) n.unshift('Light 목표에서 2 mg/kg/hr 넘게 필요하면 통증·섬망·dyssynchrony부터 재평가 (프로토콜 상한 4)');
+    if (lowP) n.unshift('승압제 사용 중 — 0.3 mg/kg/hr부터, 5–10분 간격 소량 적정');
+    if (!lightMax || s.duration==='long') n.push('수일 사용 시 반감기 ~50h까지 연장 — 끄면 바로 깬다는 전제 깨짐');
+    return n;
+  };
+  const midNotes = ()=>{
+    const n = ['섬망 위험 ↑ (Van Gelder 2024: propofol 대비 adjusted HR 1.32)'];
+    if (renalBad) n.push('신부전 — 활성대사산물(α-OH-midazolam glucuronide) 축적 → 간헐 bolus 선호');
+    if (hepBad) n.push('중증 간부전 — CYP3A4 대사 저하, 작용 연장');
+    n.push('수 시간 주입 시 CSHT ~70–90분, ICU 장기 주입에선 훨씬 길어짐');
+    n.push('병원 표준 mix 없음 — 조제 농도 확인 후 사용');
+    return n;
+  };
+  const dexNotes = ()=>{
+    const n = ['부하용량 생략 — 서맥·저혈압', 'Deep 진정 불가 — RASS −3 이하 필요해지면 전환', '병원 프로토콜 상한 1.0 mcg/kg/hr (문헌상 1.4까지)'];
+    if (lowP) n.unshift('승압제 사용 중 — 0.2 mcg/kg/hr부터, 혈압 보며 증량');
+    if (!f.elderly) n.push('SPICE III 사후분석: 65세 이하에서 사망 증가 신호 — 젊은 패혈증 환자는 신중');
+    return n;
+  };
+  const propofolRec = (min,max,when,why,lightMax) => ({key:'propofol', kind:'sed', start:0.3, min, max, when,
+    bolus: lightMax ? 'Light 목표에선 bolus 불필요' : '저혈압 — 가능하면 생략, 필요 시 10–20 mg',
+    why:[...why, 'Onset 1–2분 · 진통 효과 없음 — opioid 병용 필수'], notes:propNotes(lightMax)});
+  const dexRec = (when, why) => ({key:'dex', kind:'sed', start:0.2, min:0.2, max:1.0, when, bolus:'부하용량 없음',
+    why:[...why, 'α2 작용 — 호흡억제 거의 없음, 약한 진통 효과', 'Onset 5–10분, 반감기 1.8–3.1h'], notes:dexNotes()});
+  const midRec = (start,min,max,when,why,bolus) => ({key:'midazolam', kind:'sed', start, min, max, when, bolus: bolus || `${fmt(0.01*W)}–${fmt(0.05*W)} mg IV PRN (0.01–0.05 mg/kg)`,
+    why:[...why, 'Onset 2–5분 · 혈역학 부담이 가장 적은 진정제'], notes:midNotes()});
+  const ketRec = (when, why) => ({key:'ketamine', kind:'sed', start:0.1, min:0.05, max:0.4, when,
+    bolus:`부하 ${fmt(0.1*W)}–${fmt(0.5*W)} mg IV (0.1–0.5 mg/kg)`,
+    why:[...why, 'NMDA 길항 — 진통 · 기관지 확장 · 중추 감작 억제', '교감 자극으로 혈역학 보존되는 편 — 단독 진정제로는 쓰지 않음'],
+    notes:['고용량에서 섬망·환각·고혈압·빈맥·타액 증가',
+           ...(highP ? ['카테콜아민 고갈 shock에선 직접 심근억제가 드러나 저혈압 가능'] : []),
+           '진정·환기 환자에서 ICP 상승은 임상적으로 무의미', '병원 표준 mix 없음 — 조제 농도 확인 후 사용']});
+
+  /* Analgesic */
+  const remiOK = s.duration === 'short' && !highP && !f.opioidTol;
+  const remiReasons = [];
+  if (f.neuro) remiReasons.push('잦은 신경학적 평가 — 끄면 수 분 내 소실');
+  if (hepBad || renalBad) remiReasons.push('간·신부전 — 축적 없음');
+  if (f.extub) remiReasons.push('발관 타이밍 조절이 가장 쉬움');
+  if (remiOK && remiReasons.length){
+    r.analg = remiRec(null, ['72시간 이내 예상 MV', ...remiReasons]);
+    r.analgAlt.push(fentanylRec(0.7, '72시간 넘어가거나 remifentanil tolerance로 용량이 계속 오를 때', ['Remi → fentanyl 전환: remi 끄기 30–60분 전 fentanyl bolus 후 주입 시작']));
+  } else {
+    const start = f.opioidTol ? 1.5 : (renalBad || hepBad) ? 0.5 : 0.7;
+    const why = [];
+    if (s.pain === 'none') why.push('통증 없음 — ETT 불편감 조절 목적. PRN bolus 먼저, 반복 필요 시 지속주입');
+    else why.push('ICU 1차 opioid — 빠른 onset, 적정 쉬움');
+    if (s.hemo !== 'stable' || f.bronchospasm) why.push('Morphine보다 혈역학·기도에 유리');
+    if (f.opioidTol) why.push('만성 opioid 사용 — 시작 용량 상향 + ketamine 병용');
+    r.analg = fentanylRec(start, null, why);
+    if (remiOK) r.analgAlt.push(remiRec('단기 MV에서 각성·발관 조절이 중요해질 때 (SBT 직전 등)', ['72시간 이내 MV에서 가장 빠른 각성']));
+    if (s.duration === 'long' && !hepBad) r.analgAlt.push(hydroRec(f.opioidTol ? 'Fentanyl 용량이 계속 오를 때 — opioid rotation' : '장기 주입으로 fentanyl 축적·tolerance가 의심될 때'));
+  }
+  const morphineWhy = [];
+  if (renalBad) morphineWhy.push('신부전 — 활성대사산물 M6G 축적');
+  if (s.hemo !== 'stable') morphineWhy.push('histamine 유리 — 저혈압');
+  if (f.bronchospasm) morphineWhy.push('histamine — 기관지경련 악화');
+  if (morphineWhy.length) r.avoid.push(['Morphine', morphineWhy.join(' · ')]);
+
+  /* Sedative */
+  const propOK = !highP && !f.tg;
+  const dexOK = !brady && !highP;
+  const propWhyNot = highP ? '고용량 승압제 — 혈관확장·심근억제' : f.tg ? '고TG·췌장염 — 지질 부하' : '';
+  const dexWhyNot = brady ? '서맥·AV block' : highP ? '고용량 승압제 — 저혈압·서맥' : '';
+
+  if (f.seizure){
+    r.sed = midRec(0.1, 0.05, 2, null, ['경련중첩증 — BZD가 1차 지속주입제', '경련 목적 용량은 일반 진정(0.02–0.1 mg/kg/hr)보다 훨씬 높음'],
+      `부하 0.2 mg/kg = ${fmt(0.2*W)} mg IV, 경련 지속 시 0.1–0.2 mg/kg 반복`);
+    r.sed.notes = [...r.sed.notes.slice(1), 'cEEG로 목표(경련 소실 또는 burst suppression) 확인'];
+    if (propOK) r.sedAlt.push({...propofolRec(1, 10, 'Midazolam 고용량에도 경련 지속 — 병용 또는 전환', ['불응성 경련중첩 — GABA-A 작용 + NMDA 억제'], false),
+      start:2, bolus:`부하 1–2 mg/kg = ${fmt(W)}–${fmt(2*W)} mg IV`,
+      notes:['경련 목적 용량은 PRIS 임계(4 mg/kg/hr)를 쉽게 넘음 — 48h 이내 감량 목표, TG·CK·lactate 매일', ...(lowP?['승압제 사용 중 — 부하는 분할 투여']:[])]});
+    r.sedAlt.push({key:'ketamine', kind:'sed', start:1, min:0.5, max:5, when:'Midazolam·propofol 불응 (초불응성 경련)',
+      bolus:`부하 1–3 mg/kg = ${fmt(W)}–${fmt(3*W)} mg IV`,
+      why:['NMDA 길항 — 지속 경련에서 GABA 수용체 내재화로 BZD 효과가 떨어질 때 보완', '혈역학 보존 — 승압제 사용 중에도 상대적으로 안전'],
+      notes:['cEEG 확인하며 적정', '고용량 장기 사용 시 심근억제·타액 증가', '병원 표준 mix 없음 — 조제 농도 확인 후 사용']});
+  } else if (f.withdrawal){
+    r.sed = midRec(0.02, 0.02, 0.1, null, ['알코올·BZD 금단 — 교차내성 있는 BZD가 원인 치료', '증상 기반 간헐 bolus 우선, bolus가 잦으면 지속주입'],
+      `${fmt(0.02*W)}–${fmt(0.05*W)} mg IV PRN (증상 기반)`);
+    r.sed.notes = ['Dex 단독은 금단 경련·DT 예방 못 함 — 보조로만', 'Thiamine 먼저 (알코올)', ...r.sed.notes.slice(1)];
+    if (propOK) r.sedAlt.push(propofolRec(0.3, 3, 'BZD 고용량에도 조절 안 되는 금단 (BZD 불응성)', ['GABA-A 작용 + NMDA 억제 — BZD 불응성 금단에서 효과'], false));
+    if (dexOK && s.target === 'light') r.sedAlt.push(dexRec('빈맥·고혈압 등 교감항진 조절 보조 — 단독 금지', ['BZD 사용량 절감 보조']));
+  } else if (s.target === 'deep'){
+    if (propOK){
+      r.sed = propofolRec(0.3, 4, null, ['Deep 진정 — 빠른 적정·각성', 'Midazolam 대비 섬망 ↓ (Van Gelder 2024), CSHT 짧음'], false);
+      r.sedAlt.push(midRec((renalBad||hepBad)?0.02:0.03, 0.02, 0.1, 'Propofol 용량이 PRIS 임계에 가까워지거나 저혈압으로 증량이 막힐 때 — 병용으로 propofol 감량',
+        ['두 약 병용 시 각자 용량을 낮출 수 있음']));
+    } else {
+      r.sed = midRec((renalBad||hepBad)?0.02:0.03, 0.02, 0.1, null, [`Propofol 불가: ${propWhyNot}`, 'Deep 목표에서 혈역학 부담이 가장 적은 선택']);
+    }
+    r.sedAlt.push(ketRec('진정제 용량을 줄이고 싶을 때 — 특히 승압제 사용 중이거나 기관지경련 동반', ['Propofol·midazolam 절감 adjunct']));
+    r.avoid.push(['Dexmedetomidine', 'Deep 진정 목표 달성 불가']);
+  } else {
+    const preferDex = dexOK && (f.delirium || f.extub);
+    const base = 'Analgesia-first — opioid 적정 후에도 RASS 목표 미달일 때만 시작';
+    if (preferDex){
+      r.sed = dexRec(null, [base, f.delirium ? '섬망 동반 — PADIS 2025: 섬망 감소가 우선이면 Dex > propofol' : '발관 전후·NIV — 호흡억제 거의 없음', '쉽게 깨워 의사소통 가능']);
+      if (propOK) r.sedAlt.push(propofolRec(0.3, 2, 'Dex 1.0 mcg/kg/hr에도 RASS 목표 미달이거나 서맥으로 증량 불가', ['Propofol vs Dex: 사망·MV 기간 동등 (MENDS2, A2B)'], true));
+    } else if (propOK){
+      const why = [base, 'Propofol vs Dex: 사망·MV 기간 동등 (MENDS2) · 조기 Dex 전환 이득 없고 서맥·agitation ↑ (A2B 2025)'];
+      if (f.elderly && dexOK) why.push('65세 초과 — SPICE III 사후분석상 Dex 이득 신호, Dex도 합리적');
+      r.sed = propofolRec(0.3, 2, null, why, true);
+      if (dexOK) r.sedAlt.push(dexRec('섬망 발생, SBT·발관 준비 단계, 또는 propofol 장기 사용(PRIS 우려)', ['섬망 감소 (MENDS·SEDCOM, 단 BZD 대비 근거)', 'Propofol과 겹쳐 주입하다 propofol을 서서히 끄는 방식으로 전환']));
+    } else if (dexOK){
+      r.sed = dexRec(null, [base, `Propofol 불가: ${propWhyNot}`]);
+    } else {
+      r.sed = {key:null,
+        why:[base, `Propofol 불가: ${propWhyNot}`, `Dex 불가: ${dexWhyNot}`, 'Opioid 단독 analgosedation 유지, 필요 시 midazolam 간헐 bolus'],
+        bolus:`Midazolam ${fmt(0.01*W)}–${fmt(0.05*W)} mg IV PRN (0.01–0.05 mg/kg)`};
+      r.sedAlt.push(midRec(0.02, 0.02, 0.1, 'Bolus가 시간당 2회 넘게 필요할 때 — 저용량 지속주입', ['혈역학 부담 최소']));
+      r.sedAlt.push(ketRec('Opioid·진정제 둘 다 줄이고 싶을 때', ['Opioid 절감 + 진정 보조']));
+    }
+  }
+  if (propWhyNot && !(r.sed && r.sed.key==='propofol')) r.avoid.push(['Propofol', propWhyNot]);
+  if (dexWhyNot && s.target==='light' && !f.seizure) r.avoid.push(['Dexmedetomidine', dexWhyNot]);
+  if (!f.seizure && !f.withdrawal && !(r.sed && r.sed.key==='midazolam') && !r.sedAlt.some(a=>a.key==='midazolam'))
+    r.avoid.push(['Midazolam 지속주입', 'Routine 진정 — 섬망 ↑, 축적 (MENDS · Van Gelder)']);
+  r.avoid.push(['Remimazolam', 'ICU 장기 진정 허가·근거 없음 — 시술 진정용']);
+  if (s.target==='deep') r.avoid.push(['Sevoflurane 흡입 진정', 'ARDS에서 90일 사망 ↑ (SESAR 2025)']);
+
+  /* NMB */
+  if (f.nmb){
+    r.nmb = {key:'cisatracurium', kind:'nmb', start:1, min:0.5, max:10, when:null,
+      bolus:`부하 0.15–0.2 mg/kg = ${fmt(0.15*W)}–${fmt(0.2*W)} mg IV`,
+      why:['Hofmann 분해 — 간·신기능 무관, 히스타민 유리 적음', '병원 프로토콜: 1–3 mcg/kg/min 시작, 0.5–10까지'],
+      notes:['<b>시작 전</b> 충분한 진통·deep 진정(RASS −5) 확보 — 근이완 중 각성 방지',
+             'BIS 40–60 · TOF 1–2/4 목표', '중증 ARDS에서도 루틴 지속 근이완은 사망 이득 없음 (ROSE 2019) — 48h 이내 재평가',
+             '스테로이드·고혈당 동반 시 ICU-acquired weakness ↑']};
+  }
+
+  /* Adjuncts */
+  if (hepBad) r.adj.push({name:'Acetaminophen', mech:'중추 COX 억제', dose:'최대 2 g/day 또는 회피', reason:'중증 간기능저하 — 간독성', caution:''});
+  else r.adj.push({name:'Acetaminophen', mech:'중추 COX 억제',
+    dose: W < 50 ? `15 mg/kg = ${fmt(15*W)} mg IV/PO q6h · max 60 mg/kg/day` : '650 mg q4h 또는 1 g q6h IV/PO · max 4 g/day',
+    reason:'Opioid 절감 1순위 — 신장·위장관 부담 최소',
+    caution: s.hemo !== 'stable' ? 'IV 제형 저혈압 — shock에선 경장 우선' : '영양불량·알코올 사용자는 2–3 g/day'});
+  const wantKet = f.opioidTol || f.bronchospasm;
+  if (wantKet && !r.sedAlt.some(a=>a.key==='ketamine'))
+    r.adj.push({name:'Ketamine 저용량', mech:'NMDA 길항',
+      dose:`부하 ${fmt(0.1*W)}–${fmt(0.5*W)} mg → 0.05–0.4 mg/kg/hr = ${fmt(0.05*W/getConc('ketamine'))}–${fmt(0.4*W/getConc('ketamine'))} cc/hr (${getConc('ketamine')} mg/mL)`,
+      reason:[f.opioidTol?'Opioid tolerance · OIH 억제':'', f.bronchospasm?'기관지 평활근 이완':''].filter(Boolean).join(' · '),
+      caution:'고용량 섬망·고혈압·빈맥' + (highP?' · 고용량 승압제면 저혈압 가능':'')});
+  if (f.neuropathic){
+    const g = s.renal==='normal' ? '100 mg tid 시작 → 1–3일마다 증량, 900–3,600 mg/day 분3' : s.renal==='impaired' ? 'CrCl 15–29: 200–700 mg/day 분1–2' : 'CRRT: 감량 시작, 진정 과다 보며 적정';
+    r.adj.push({name:'Gabapentin (경장)', mech:'α2δ-1 결합', dose:g,
+      reason:'신경병증성 통증 — GBS에서 통증·fentanyl ↓ (Pandey 2005). Pregabalin 75 mg bid도 대안',
+      caution:'공장 영양이면 흡수 ↓ · opioid와 병용 시 호흡억제'});
+  }
+  const nsaidBad = [];
+  if (renalBad) nsaidBad.push('신기능 저하');
+  if (s.hemo !== 'stable') nsaidBad.push('shock — AKI');
+  if (f.bleeding) nsaidBad.push('출혈 · 혈소판 기능 저하');
+  if (hepBad) nsaidBad.push('중증 간부전');
+  if (nsaidBad.length) r.avoid.push(['NSAID', nsaidBad.join(' · ')]);
+  else if (s.pain !== 'none') r.adj.push({name:'Ketorolac', mech:'COX-1/2 억제',
+    dose: f.elderly ? '15 mg IV q6h · max 60 mg/day · ≤ 5일' : '30 mg IV 후 15–30 mg q6h · max 120 mg/day · ≤ 5일',
+    reason:'경–중등도 통증 보조. Ibuprofen 400–800 mg IV q6h도 대안', caution:'AKI · GI 출혈 — Cr·Hb 감시'});
+  if (f.seizure) r.avoid.push(['Nefopam', '경련역치 저하']);
+  else if (s.pain !== 'none') r.adj.push({name:'Nefopam', mech:'5-HT · NE · DA 재흡수 억제',
+    dose:'20 mg slow IV (≥ 15분, 누운 자세) q4h PRN · max 120 mg/day', reason:'Multimodal 보조',
+    caution:'오심·발한·빈맥' + (f.elderly ? ' · 고령 심질환자 주의' : '') + ' · 녹내장 · MAOI 병용 금지'});
+  if (s.pain === 'modsev' && s.renal === 'normal' && !f.seizure) r.adj.push({name:'Magnesium sulfate', mech:'NMDA 차단',
+    dose:`30–50 mg/kg = ${fmt(0.03*W)}–${fmt(0.05*W)} g IV`, reason:'중추 감작 억제 — opioid 절감 보조', caution:'저혈압 · Mg 농도 확인 · 신부전 금기'});
+
+  /* Monitoring */
+  r.mon.push(['진정', s.target==='light' ? 'RASS 0 ~ −2, q4h · 매일 SAT + SBT 연계' : 'RASS −3 ~ −5 · 매일 deep 필요성 재평가']);
+  r.mon.push(['통증', 'NRS < 4, 불가하면 CPOT ≤ 2 / BPS ≤ 5 · 활력징후는 단서일 뿐']);
+  if (f.nmb) r.mon.push(['BIS·TOF', 'BIS 40–60 · TOF 1–2/4']);
+  if (f.seizure) r.mon.push(['cEEG', '경련 소실·burst suppression 확인']);
+  r.mon.push(['섬망', 'CAM-ICU 매 근무조 · 항정신병약 루틴 치료 근거 없음']);
+  if ((r.sed && r.sed.key==='propofol') || r.sedAlt.some(a=>a.key==='propofol')) r.mon.push(['PRIS', '48h 넘으면 TG · CK · lactate · ECG']);
+  if ((r.sed && r.sed.key==='dex') || r.sedAlt.some(a=>a.key==='dex')) r.mon.push(['Dex', 'HR < 50 또는 MAP 하락 시 감량']);
+  r.mon.push(['수면', 'Melatonin은 수면 목적 — 섬망 예방 효과 없음']);
+  return r;
+}
+
+/* ---------- main render ---------- */
+let RECS = {};
+let CUR = {W:70, s:null, w:null};
+const ccRec = (rec, x) => DRUGS[rec.key].perH(x, CUR.W) / getConc(rec.key);
+function register(rec, role){ if (!rec || !rec.key) return; rec.role = role; if (!RECS[rec.key]) RECS[rec.key] = rec; }
+const chev = '<span class="chev" aria-hidden="true">›</span>';
+function recRow(rec, rank){
+  const d = DRUGS[rec.key];
+  const badge = rank === 1 ? '<span class="badge">1차</span>' : '<span class="badge two">2차</span>';
+  const why = rec.why.slice(0, rank===1 ? 3 : 2);
+  return `<button class="rowbtn" type="button" data-open="order-${rec.key}">
+    <span class="rmain">
+      <span class="rtitle">${badge}${d.name}${d.brand?`<span class="br">${d.brand}</span>`:''}${d.hosp?'':'<span class="badge na">mix 확인</span>'}</span>
+      ${rec.when ? `<span class="rsub when">${rec.when}</span>` : ''}
+      <ul class="rwhy">${why.map(w=>`<li>${w}</li>`).join('')}</ul>
+    </span>
+    <span class="rval"><b>${fmt(ccRec(rec, rec.start))}</b> cc/hr<span>최대 ${fmt(ccRec(rec, rec.max))}</span></span>${chev}
+  </button>`;
+}
+const out = document.getElementById('out');
+function render(){
+  const s = readState();
+  const w = weights(s);
+  document.getElementById('wt').innerHTML = `IBW <b>${fmt(w.ibw)} kg</b> · BMI <b>${fmt(w.bmi)}</b> · 진정·진통 투약 체중 <b>${fmt(w.W)} kg</b> (${w.how}${w.how==='보정체중'?' — 실체중 > IBW×1.2':''})`;
+  GROUPS.forEach(g=>g.fields.forEach(f=>{ const o = f.opts.find(o=>o[0]===s[f.id]); document.getElementById('note-'+f.id).textContent = o ? o[2] : ''; }));
+  CUR = {W:w.W, s, w};
+  const r = plan(s, w.W);
+  RECS = {};
+  register(r.analg, '1차 진통');
+  r.analgAlt.forEach(a=>register(a, '2차 진통'));
+  if (r.sed && r.sed.key) register(r.sed, '1차 진정');
+  r.sedAlt.forEach(a=>register(a, r.sed && r.sed.key ? '2차 진정' : '진정 대안'));
+  if (r.nmb) register(r.nmb, '근이완제');
+
+  const a = r.analg, sd = r.sed;
+  const sumA = `<button class="sumcard" type="button" data-open="order-${a.key}"><span class="k">1차 진통 ›</span><span class="n">${DRUGS[a.key].name}</span><span class="v">${fmt(ccRec(a,a.start))}<small>cc/hr</small></span><span class="r">최대 ${fmt(ccRec(a,a.max))} cc/hr</span></button>`;
+  const sumS = sd && sd.key
+    ? `<button class="sumcard" type="button" data-open="order-${sd.key}"><span class="k">1차 진정 ›</span><span class="n">${DRUGS[sd.key].name}</span><span class="v">${fmt(ccRec(sd,sd.start))}<small>cc/hr</small></span><span class="r">최대 ${fmt(ccRec(sd,sd.max))} cc/hr</span></button>`
+    : `<button class="sumcard" type="button" disabled><span class="k">1차 진정</span><span class="n">지속주입 보류</span><span class="v">PRN</span><span class="r">Opioid 단독 + bolus</span></button>`;
+  const chips = `<div class="chips"><span class="chip on">${s.target==='light'?'RASS 0 ~ −2':'RASS −3 ~ −5'}</span><span class="chip">CPOT ≤ 2 · BPS ≤ 5</span><span class="chip">투약 체중 ${fmt(w.W)} kg</span></div>`;
+  const sedGroup = sd && sd.key ? recRow(sd, 1)
+    : `<div class="plain"><span class="t">진정제 지속주입 보류</span>${sd.why.map(x=>`<span class="r">· ${x}</span>`).join('')}<span class="d">Rescue: ${sd.bolus}</span></div>`;
+  out.innerHTML = `<div class="gh">처방 요약</div>
+    <div class="summary">${sumA}${sumS}</div>${chips}
+    <div class="gh">진통제</div><div class="group">${recRow(a,1)}${r.analgAlt.map(x=>recRow(x,2)).join('')}</div>
+    <div class="gh">진정제</div><div class="group">${sedGroup}${r.sedAlt.map(x=>recRow(x,2)).join('')}</div>
+    ${r.nmb ? `<div class="gh">근이완제</div><div class="group">${recRow(r.nmb,1)}</div>` : ''}
+    <div class="gh">보조 진통제 · opioid 절감</div><div class="group">${r.adj.map(x=>`<div class="plain"><span class="t">${x.name}<small>${x.mech}</small></span><span class="d">${x.dose}</span><span class="r">${x.reason}</span>${x.caution?`<span class="c">주의: ${x.caution}</span>`:''}</div>`).join('')}</div>
+    <div class="gh">피할 약</div><div class="group">${r.avoid.map(([n,y])=>`<div class="plain bad"><span class="t">${n}</span><span class="r">${y}</span></div>`).join('')}</div>
+    <div class="gh">모니터링</div><div class="group">${r.mon.map(([k,v])=>`<div class="plain"><div class="mon"><span class="k">${k}</span><span class="v">${v}</span></div></div>`).join('')}</div>`;
+  renderLib();
+}
+
+/* ---------- library ---------- */
+const LIBINF = {
+  dex:{kind:'sed', start:0.2, min:0.2, max:1.0, bolus:'부하용량 없음', why:['병원 프로토콜: 유지 0.2–1 mcg/kg/hr', 'Light 진정 · 섬망 · 발관 전후'], notes:['서맥·저혈압 — HR < 50이면 감량', 'Deep 진정 불가']},
+  propofol:{kind:'sed', start:0.3, min:0.3, max:4, bolus:'필요 시 10–20 mg (저혈압 주의)', why:['병원 프로토콜: 유지 0.3–4 mg/kg/hr'], notes:['<b>PRIS</b> 4 mg/kg/hr × 48h 이상 — TG·CK·lactate 확인', 'Light 목표에서 2 넘게 필요하면 원인 재평가']},
+  fentanyl:{kind:'analg', start:0.7, min:0.5, max:10, bolus:'0.35–0.5 mcg/kg IV q30–60분 PRN', why:['병원 프로토콜: 유지 0.7–10 mcg/kg/hr'], notes:['장기 주입 시 축적 — 각성 지연 주의']},
+  remifentanil:{kind:'analg', start:0.1, min:0.05, max:0.75, bolus:'Bolus 금지 — 흉벽강직 · 서맥', why:['병원 프로토콜: 0.1–0.15 시작, 최대 0.75 mcg/kg/min'], notes:['중단 30–60분 전 대체 진통제 투여']},
+  cisatracurium:{kind:'nmb', start:1, min:0.5, max:10, bolus:'부하 0.15–0.2 mg/kg IV', why:['병원 프로토콜: 1–3 시작, 0.5–10 mcg/kg/min'], notes:['충분한 진통·deep 진정 확보 후 시작', 'TOF 1–2/4 · BIS 40–60']},
+};
+const LIBGROUPS = [
+  {head:'진정 · 진통 · 근이완', items:['inf:dex','inf:propofol','inf:fentanyl','inf:remifentanil','inf:cisatracurium']},
+  {head:'승압제 · 강심제', items:['vaso:norepinephrine','vaso:epinephrine','vaso:dopamine','vaso:dobutamine','fixed:vasopressin']},
+  {head:'항응고', items:['hep:heparin']},
+  {head:'기타', items:['ast:ast']},
+];
+const VP = {name:'Vasopressin', unit:'U/min', concDef:0.2, cu:'U/mL', mix:'Vasopressin 20 U/1 mL + N/S 99 mL = 100 mL', doses:[0.01,0.02,0.03,0.04], start:0.03};
+const HEP = {concDef:100, cu:'U/mL', mix:'Heparin 25,000 U + N/S 250 mL'};
+const f1 = n => Number(n.toFixed(1)).toLocaleString('ko-KR',{maximumFractionDigits:1});
+const vasoState = {};
+function vasoCalc(id, strengthId){
+  const v = VASO[id]; const W = CUR.w ? CUR.w.tbw : 70;
+  const st = v.strengths.find(x=>x[0]===strengthId) || v.strengths[0];
+  const mg = st[2]*W, amps = mg/v.ampMg, vol = amps*v.ampMl, dil = 500 - vol;
+  const concMcg = mg*1000/500;
+  const ccPer = dose => dose*W*60/concMcg;
+  return {v, st, W, mg, amps, vol, dil, ccPer, ruleCc: ccPer(v.ruleDose)/W*W};
+}
+function libRow(spec){
+  const [type,id] = spec.split(':');
+  const Wd = CUR.W, Wt = CUR.w ? CUR.w.tbw : 70;
+  if (type === 'inf'){
+    const d = DRUGS[id], L = LIBINF[id], c = getConc(id);
+    const a = d.perH(L.start,Wd)/c, b = d.perH(L.max,Wd)/c;
+    return `<button class="rowbtn" type="button" data-open="drug-${id}"><span class="rmain"><span class="rtitle">${d.brand||d.name}${d.brand?`<span class="br">${d.name}</span>`:''}${d.ctrl?`<span class="badge ctrl">${d.ctrl}</span>`:''}</span><span class="rsub">${d.mix} · ${c} ${d.cu}</span></span><span class="rval"><b>${fmt(a)}</b> cc/hr<span>${fmt(L.start)}–${fmt(L.max)} ${d.unit}</span></span>${chev}</button>`;
+  }
+  if (type === 'vaso'){
+    const k = vasoCalc(id, 's');
+    return `<button class="rowbtn" type="button" data-open="drug-${id}"><span class="rmain"><span class="rtitle">${k.v.name}<span class="br">${k.v.alias}</span></span><span class="rsub">${f1(k.mg)} mg + ${k.v.diluent} ${f1(k.dil)} mL = 500 mL (${fmt(Wt)} kg)</span></span><span class="rval"><b>${fmt(k.v.ruleDose)}</b> = ${fmt(k.ccPer(k.v.ruleDose))} cc/hr<span>${k.v.strengths.length>1?'Single 기준':'표준'}</span></span>${chev}</button>`;
+  }
+  if (type === 'fixed'){
+    const c = getC('vasopressin', VP.concDef);
+    return `<button class="rowbtn" type="button" data-open="drug-vasopressin"><span class="rmain"><span class="rtitle">Vasopressin<span class="badge na">차트 미등록</span></span><span class="rsub">고정용량 0.03 U/min · ${c} U/mL</span></span><span class="rval"><b>${fmt(VP.start*60/c)}</b> cc/hr<span>0.03 U/min</span></span>${chev}</button>`;
+  }
+  if (type === 'hep'){
+    const c = getC('heparin', HEP.concDef);
+    return `<button class="rowbtn" type="button" data-open="drug-heparin"><span class="rmain"><span class="rtitle">Heparin<span class="br">weight-based</span></span><span class="rsub">Bolus 60 U/kg · 14 U/kg/hr · aPTT 조절표</span></span><span class="rval"><b>${fmt(14*Wt/c)}</b> cc/hr<span>${fmt(Wt)} kg · ${c} U/mL</span></span>${chev}</button>`;
+  }
+  if (type === 'ast'){
+    return `<button class="rowbtn" type="button" data-open="drug-ast"><span class="rmain"><span class="rtitle">AST 희석법</span><span class="rsub">1 cc에 300 mcg 만드는 법 · 일반 항생제 · Tazocin</span></span>${chev}</button>`;
+  }
+  return '';
+}
+function renderLib(){
+  const lib = document.getElementById('lib');
+  const Wt = CUR.w ? CUR.w.tbw : 70;
+  const li = document.getElementById('lib-weight');
+  if (li){
+    if (document.activeElement !== li) li.value = Wt;
+    const lbl = li.parentNode.querySelector('small'); if (lbl) lbl.textContent = `추천 탭과 같이 바뀜 · 진정제는 비만 시 보정체중 ${fmt(CUR.W)} kg로 계산`;
+    lib.querySelectorAll('.group[data-g]').forEach(g=>{ g.innerHTML = LIBGROUPS[+g.dataset.g].items.map(libRow).join(''); });
+    return;
+  }
+  lib.innerHTML = `<div class="gh">체중</div><div class="group"><div class="cell"><label class="lbl" for="lib-weight">실체중<small>추천 탭과 같이 바뀜 · 진정제는 비만 시 보정체중 ${fmt(CUR.W)} kg로 계산</small></label><input id="lib-weight" type="number" inputmode="decimal" min="25" max="250" value="${Wt}"><span class="unit">kg</span></div></div>`
+    + LIBGROUPS.map((g,i)=>`<div class="gh">${g.head}</div><div class="group" data-g="${i}">${g.items.map(libRow).join('')}</div>`).join('')
+    + `<div class="gf">승압제·heparin은 실체중, 진정·진통제는 투약 체중(비만 시 보정체중)으로 계산해. "차트 미등록"은 병원 차트에 없는 약이라 농도를 확인하고 써.</div>`;
+}
+
+/* ---------- detail pages ---------- */
+const sheet = document.getElementById('sheet');
+const backIcon = '<svg viewBox="0 0 12 20" aria-hidden="true"><path d="M10 2 2 10l8 8" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+function shell(title, backLabel, body){
+  const cta = body.includes('id="s-order"') ? `<div class="cta"><button class="copy" type="button" id="s-copy">간호사 지시문 복사</button></div>` : '';
+  return `<div class="sbar"><div class="sbar-in"><button class="back" type="button" id="s-back">${backIcon}${backLabel}</button><span class="stitle">${title}</span><span></span></div></div><div class="sbody">${body}${cta}</div>`;
+}
+function orderBox(text){
+  return `<div class="order"><div class="order-h"><b>간호사 지시문</b></div><pre id="s-order">${esc(text)}</pre></div>`;
+}
+function rateTable(head, rows){
+  return `<div class="group tablewrap"><table class="rate"><thead><tr>${head.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+function pickVals(steps, start, min, max){
+  let vals = steps.filter(x => x >= min - 1e-9 && x <= max + 1e-9);
+  vals.push(start, min, max);
+  vals = [...new Set(vals.map(v=>+v.toFixed(4)))].sort((a,b)=>a-b);
+  if (vals.length < 5){ const n=6, st=(max-min)/(n-1); for(let i=0;i<n;i++) vals.push(+(min+st*i).toFixed(3)); vals=[...new Set(vals)].sort((a,b)=>a-b); }
+  return vals;
+}
+function targetText(kind){
+  if (kind === 'analg') return '목표 CPOT ≤ 2 · BPS ≤ 5';
+  if (kind === 'nmb') return '목표 TOF 1–2/4 · BIS 40–60';
+  return CUR.s && CUR.s.target === 'deep' ? '목표 RASS −3 ~ −5' : '목표 RASS 0 ~ −2';
+}
+function infPage(rec, backLabel){
+  const d = DRUGS[rec.key], c = getConc(rec.key), custom = c !== d.conc, W = CUR.W;
+  const ccx = x => d.perH(x,W)/c;
+  const perKg = d.unit.includes('/kg');
+  const rows = pickVals(d.steps, rec.start, rec.min, rec.max).map(v=>{
+    const isS = Math.abs(v-rec.start)<1e-6, isM = Math.abs(v-rec.max)<1e-6;
+    return `<tr class="${isS?'is-start':''} ${isM?'is-max':''}"><td>${fmt(v)}${isS?'<span class="mk">시작</span>':''}${isM?'<span class="mk">최대</span>':''}</td>${perKg?`<td>${fmt(d.perH(v,W))}</td>`:''}<td class="cc">${fmt(ccx(v))}</td></tr>`;
+  }).join('');
+  const mixTxt = custom ? `농도 ${c} ${d.cu} (사용자 지정)` : `${d.mix} (${c} ${d.cu})`;
+  const lines = [`[${d.brand || d.name}] ${mixTxt}`, `체중 ${fmt(W)} kg 기준`,
+    `${fmt(rec.start)} ${d.unit} = ${fmt(ccx(rec.start))} cc/hr로 시작`, `${d.step} — ${targetText(rec.kind)}`,
+    `최대 ${fmt(rec.max)} ${d.unit} = ${fmt(ccx(rec.max))} cc/hr까지`];
+  if (rec.bolus){ const b = strip(rec.bolus); lines.push(/^bolus/i.test(b) ? b : `Bolus: ${b}`); }
+  const body = `<div class="dhead"><div class="dtags"><span class="badge">${rec.role}</span>${d.ctrl?`<span class="badge ctrl">${d.ctrl}</span>`:''}${d.hosp?'':'<span class="badge na">차트 미등록 — 농도 확인</span>'}</div>
+      <h2 class="dname" id="s-title">${d.name}${d.brand?`<span>${d.brand}</span>`:''}</h2>
+      <div class="dmeta">투약 체중 ${fmt(W)} kg · ${targetText(rec.kind)}</div></div>
+    <div class="big3">
+      <div class="tile"><span class="k">시작</span><span class="v">${fmt(ccx(rec.start))}<small>cc/hr</small></span><span class="s">${fmt(rec.start)} ${d.unit}</span></div>
+      <div class="tile max"><span class="k">최대</span><span class="v">${fmt(ccx(rec.max))}<small>cc/hr</small></span><span class="s">${fmt(rec.max)} ${d.unit}</span></div>
+      <div class="tile wide"><span class="k">증량</span><span class="s">${d.step}</span></div>
+      <div class="tile wide"><span class="k">Bolus</span><span class="s">${rec.bolus}</span></div>
+    </div>
+    ${orderBox(lines.join('\n'))}
+    <div class="gh">Mix</div><div class="group">
+      <div class="cell"><span class="lbl"><span class="mixv${custom?' custom':''}">${custom ? '사용자 지정 농도' : d.mix}</span>${custom?`<small>기본: ${d.mix}</small>`:''}</span></div>
+      <div class="cell"><label class="lbl" for="s-conc">농도</label><input id="s-conc" data-c="${rec.key}" data-def="${d.conc}" type="number" inputmode="decimal" step="any" min="0.01" value="${c}"><span class="unit" style="width:auto">${d.cu}</span></div>
+    </div>
+    <div class="gh">주입 속도표 · ${fmt(W)} kg</div>${rateTable([d.unit, ...(perKg?[d.mass+'/hr']:[]), 'cc/hr'], rows)}
+    ${rec.when ? `<div class="gh">언제 쓰나</div><div class="group"><ul class="blist"><li>${rec.when}</li></ul></div>` : ''}
+    <div class="gh">근거</div><div class="group"><ul class="blist">${rec.why.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+    ${rec.notes && rec.notes.length ? `<div class="gh">주의</div><div class="group"><ul class="nlist">${rec.notes.map(x=>`<li>${x}</li>`).join('')}</ul></div>` : ''}`;
+  return shell(d.brand || d.name, backLabel, body);
+}
+function vasoPage(id){
+  const sid = vasoState[id] || 's';
+  const k = vasoCalc(id, sid), v = k.v;
+  const rows = pickVals(v.steps, v.start, v.steps[0], v.max).map(x=>{
+    const isS = Math.abs(x-v.start)<1e-6, isM = Math.abs(x-v.max)<1e-6;
+    return `<tr class="${isS?'is-start':''} ${isM?'is-max':''}"><td>${fmt(x)}${isS?'<span class="mk">시작</span>':''}${isM?'<span class="mk">최대</span>':''}</td><td class="cc">${fmt(k.ccPer(x))}</td></tr>`;
+  }).join('');
+  const seg = v.strengths.length > 1 ? `<div class="gh">농도</div><div class="group"><div class="cellcol"><div class="seg" role="radiogroup" aria-label="농도">${v.strengths.map(st=>`<input type="radio" name="vs" id="vs-${st[0]}" value="${st[0]}" data-vaso="${id}" ${st[0]===sid?'checked':''}><label for="vs-${st[0]}">${st[1]}</label>`).join('')}</div><span class="segnote">${fmt(v.ruleDose)} ${v.unit} = ${fmt(k.ccPer(v.ruleDose))} cc/hr</span></div></div>` : '';
+  const lines = [`[${v.name}${v.strengths.length>1?' '+k.st[1]:''}] ${v.name} ${f1(k.mg)} mg (${f1(k.amps)}A, ${f1(k.vol)} mL) + ${v.diluent} ${f1(k.dil)} mL = 500 mL`,
+    `체중 ${fmt(k.W)} kg 기준 · ${fmt(v.ruleDose)} ${v.unit} = ${fmt(k.ccPer(v.ruleDose))} cc/hr`,
+    `${fmt(v.start)} ${v.unit} = ${fmt(k.ccPer(v.start))} cc/hr로 시작`, `${v.step} — ${v.target}`,
+    `최대 ${fmt(v.max)} ${v.unit} = ${fmt(k.ccPer(v.max))} cc/hr까지`];
+  const body = `<div class="dhead"><div class="dtags"><span class="badge">승압 · 강심</span><span class="badge two">일산백 차트</span></div>
+      <h2 class="dname" id="s-title">${v.name}<span>${v.alias}</span></h2><div class="dmeta">실체중 ${fmt(k.W)} kg · ${v.target}</div></div>
+    ${seg}
+    <div class="big3">
+      <div class="tile"><span class="k">시작</span><span class="v">${fmt(k.ccPer(v.start))}<small>cc/hr</small></span><span class="s">${fmt(v.start)} ${v.unit}</span></div>
+      <div class="tile max"><span class="k">최대</span><span class="v">${fmt(k.ccPer(v.max))}<small>cc/hr</small></span><span class="s">${fmt(v.max)} ${v.unit}</span></div>
+      <div class="tile wide"><span class="k">Mix · ${fmt(k.W)} kg</span><span class="s">${v.name} ${v.ampTxt} × <b>${f1(k.amps)}A</b> (${f1(k.mg)} mg, ${f1(k.vol)} mL) + ${v.diluent} <b>${f1(k.dil)} mL</b> = 500 mL</span></div>
+      <div class="tile wide"><span class="k">증량</span><span class="s">${v.step}</span></div>
+    </div>
+    ${orderBox(lines.join('\n'))}
+    <div class="gh">주입 속도표 · ${fmt(k.W)} kg</div>${rateTable([v.unit,'cc/hr'], rows)}
+    <div class="gh">언제 쓰나</div><div class="group"><ul class="blist">${v.why.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+    <div class="gh">주의</div><div class="group"><ul class="nlist">${v.notes.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+    <div class="gf">차트 공식: 체중(kg) × ${k.st[2]} mg을 500 mL에 섞으면 ${fmt(v.ruleDose)} ${v.unit} = ${fmt(k.ccPer(v.ruleDose))} cc/hr — 체중이 달라도 이 비율은 같아.</div>`;
+  return shell(v.name, '주입표', body);
+}
+function vpPage(){
+  const c = getC('vasopressin', VP.concDef), custom = c !== VP.concDef;
+  const ccx = x => x*60/c;
+  const rows = VP.doses.map(x=>`<tr class="${x===VP.start?'is-start':''}"><td>${fmt(x)}${x===VP.start?'<span class="mk">표준</span>':''}</td><td class="cc">${fmt(ccx(x))}</td></tr>`).join('');
+  const lines = [`[Vasopressin] ${custom ? `농도 ${c} U/mL (사용자 지정)` : `${VP.mix} (${c} U/mL) — 농도 확인`}`, `0.03 U/min = ${fmt(ccx(0.03))} cc/hr 고정 (적정하지 않음)`, `MAP ≥ 65 유지되면 NE 먼저 감량, vasopressin은 마지막에 중단`];
+  const body = `<div class="dhead"><div class="dtags"><span class="badge">승압</span><span class="badge na">차트 미등록 — 농도 확인</span></div>
+      <h2 class="dname" id="s-title">Vasopressin<span>바소프레신</span></h2><div class="dmeta">체중 무관 고정용량 · U/min</div></div>
+    <div class="big3">
+      <div class="tile"><span class="k">표준</span><span class="v">${fmt(ccx(0.03))}<small>cc/hr</small></span><span class="s">0.03 U/min</span></div>
+      <div class="tile max"><span class="k">상한</span><span class="v">${fmt(ccx(0.04))}<small>cc/hr</small></span><span class="s">0.04 U/min</span></div>
+    </div>
+    ${orderBox(lines.join('\n'))}
+    <div class="gh">Mix</div><div class="group">
+      <div class="cell"><span class="lbl"><span class="mixv${custom?' custom':''}">${custom?'사용자 지정 농도':VP.mix}</span></span></div>
+      <div class="cell"><label class="lbl" for="s-conc">농도</label><input id="s-conc" data-c="vasopressin" data-def="${VP.concDef}" type="number" inputmode="decimal" step="any" min="0.01" value="${c}"><span class="unit" style="width:auto">U/mL</span></div>
+    </div>
+    <div class="gh">주입 속도표</div>${rateTable(['U/min','cc/hr'], rows)}
+    <div class="gh">언제 쓰나</div><div class="group"><ul class="blist"><li>패혈성 쇼크에서 NE 0.25–0.5 mcg/kg/min 이상 필요할 때 추가 (SSC 2021)</li><li>NE 요구량 절감 목적 — 사망 이득은 불확실 (VASST)</li></ul></div>
+    <div class="gh">주의</div><div class="group"><ul class="nlist"><li>말단·장간막 허혈 관찰</li><li>저나트륨혈증</li></ul></div>`;
+  return shell('Vasopressin', '주입표', body);
+}
+function hepPage(){
+  const c = getC('heparin', HEP.concDef), custom = c !== HEP.concDef, W = CUR.w ? CUR.w.tbw : 70;
+  const bolus = 60*W, inf = 14*W;
+  const adj = [['≤ 55','3 cc 증량','2,000 U IV bolus'],['56–65','2 cc 증량',''],['66–90','변경 없음',''],['91–100','1 cc 감량',''],['101–115','2 cc 감량','30분 중단'],['116–150','3 cc 감량','60분 중단'],['> 150','6 cc 감량','60분 중단']];
+  const rows = adj.map(([a,b,cn])=>{ const m = b.match(/(\d+) cc/); const u = m ? ` (${fmt(+m[1]*c)} U/hr)` : ''; return `<tr><td>${a}</td><td style="text-align:left">${b}${u}</td><td style="text-align:left">${cn||'—'}</td></tr>`; }).join('');
+  const lines = [`[Heparin] ${custom?`농도 ${c} U/mL (사용자 지정)`:`${HEP.mix} (${c} U/mL) — 농도 확인`}`, `체중 ${fmt(W)} kg 기준`,
+    `Bolus 60 U/kg = ${fmt(bolus)} U IV`, `14 U/kg/hr = ${fmt(inf)} U/hr = ${fmt(inf/c)} cc/hr로 시작`, `6시간 후 aPTT 확인, 조절표대로 증감`];
+  const body = `<div class="dhead"><div class="dtags"><span class="badge">항응고</span><span class="badge two">일산백 차트</span></div>
+      <h2 class="dname" id="s-title">Heparin<span>weight-based</span></h2><div class="dmeta">실체중 ${fmt(W)} kg</div></div>
+    <div class="big3">
+      <div class="tile"><span class="k">Bolus</span><span class="v">${fmt(bolus)}<small>U</small></span><span class="s">60 U/kg IV</span></div>
+      <div class="tile"><span class="k">주입 시작</span><span class="v">${fmt(inf/c)}<small>cc/hr</small></span><span class="s">14 U/kg/hr = ${fmt(inf)} U/hr</span></div>
+    </div>
+    ${orderBox(lines.join('\n'))}
+    <div class="gh">aPTT 조절 (병원 차트)</div>${rateTable(['aPTT (sec)','주입 조절','Bolus · 중단'], rows)}
+    <div class="gh">Mix</div><div class="group">
+      <div class="cell"><span class="lbl"><span class="mixv custom">차트에 mix 농도 없음 — 병동 기준 확인</span><small>cc 조절량은 차트 그대로. U/hr 환산은 아래 농도 기준</small></span></div>
+      <div class="cell"><label class="lbl" for="s-conc">농도</label><input id="s-conc" data-c="heparin" data-def="${HEP.concDef}" type="number" inputmode="decimal" step="any" min="1" value="${c}"><span class="unit" style="width:auto">U/mL</span></div>
+    </div>`;
+  return shell('Heparin', '주입표', body);
+}
+function astPage(){
+  const body = `<div class="dhead"><h2 class="dname" id="s-title">AST 희석법</h2><div class="dmeta">1 cc에 300 mcg AST 용액 만드는 법 (병원 차트)</div></div>
+    <div class="gh">일반 항생제 1 g</div><div class="group"><ol class="blist astep">
+      <li>1 g 항생제에 희석액 10 cc mix → 1 cc = 100 mg = 100,000 mcg</li>
+      <li>0.1 cc 뽑음 + N/S 0.9 cc → 1 cc = 10,000 mcg</li>
+      <li>0.1 cc 뽑음 + N/S 0.9 cc → 1 cc = 1,000 mcg</li>
+      <li>0.3 cc 뽑음 + N/S 0.7 cc → 1 cc = 300 mcg → 이 용액으로 AST 시행 (피내주사 0.02 mL)</li></ol></div>
+    <div class="gh">Tazocin 4.5 g (합성 penicillin 계)</div><div class="group"><ol class="blist astep">
+      <li>4.5 g을 N/S 20 cc로 희석</li>
+      <li>0.15 cc 뽑음 + N/S 0.85 cc = 1 cc</li>
+      <li>0.1 cc + N/S 0.9 cc</li>
+      <li>0.1 cc + N/S 0.9 cc = 1 cc (piperacillin 기준 1 cc = 0.3 mg = 300 mcg) → AST 시행 (피내주사 0.02 mL)</li></ol></div>
+    ${orderBox('AST: 1 cc = 300 mcg 용액으로 피내반응 검사 시행\n일반 1 g: 10 cc mix → 0.1+0.9 → 0.1+0.9 → 0.3+0.7\nTazocin 4.5 g: N/S 20 cc → 0.15+0.85 → 0.1+0.9 → 0.1+0.9')}`;
+  return shell('AST', '주입표', body);
+}
+function libInfRec(id){ const L = LIBINF[id]; return {key:id, role:'병원 주입표', when:null, ...L}; }
+
+/* ---------- routing ---------- */
+let tab = 'rec', opened = false;
+function setTab(t){
+  tab = t;
+  document.getElementById('view-rec').hidden = t !== 'rec';
+  document.getElementById('view-lib').hidden = t !== 'lib';
+  document.querySelectorAll('[data-tab]').forEach(b=>b.setAttribute('aria-selected', String(b.dataset.tab === t)));
+}
+function pageFor(h){
+  let m;
+  if ((m = h.match(/^order-([a-z]+)$/)) && RECS[m[1]]) return {tab:'rec', html:infPage(RECS[m[1]], '추천')};
+  if ((m = h.match(/^drug-([a-z]+)$/))){
+    const id = m[1];
+    if (LIBINF[id]) return {tab:'lib', html:infPage(libInfRec(id), '주입표')};
+    if (VASO[id]) return {tab:'lib', html:vasoPage(id)};
+    if (id === 'vasopressin') return {tab:'lib', html:vpPage()};
+    if (id === 'heparin') return {tab:'lib', html:hepPage()};
+    if (id === 'ast') return {tab:'lib', html:astPage()};
+  }
+  return null;
+}
+function showPage(p, keepScroll){
+  const y = sheet.scrollTop;
+  sheet.innerHTML = p.html; sheet.hidden = false;
+  sheet.scrollTop = keepScroll ? y : 0;
+  document.documentElement.style.overflow = 'hidden';
+}
+function hidePage(){ sheet.hidden = true; sheet.innerHTML = ''; document.documentElement.style.overflow = ''; }
+function sync(){
+  const h = location.hash.slice(1);
+  if (h === 'lib' || h === 'rec') { setTab(h); hidePage(); return; }
+  const p = pageFor(h);
+  if (p){ setTab(p.tab); showPage(p); const b = document.getElementById('s-back'); if (b) b.focus({preventScroll:true}); }
+  else { hidePage(); }
+}
+function go(h){ opened = true; if (location.hash.slice(1) === h) sync(); else location.hash = h; }
+function back(){ if (opened && history.length > 1){ opened = false; history.back(); } else { location.hash = tab; } }
+
+/* ---------- events ---------- */
+inputs.addEventListener('input', render);
+document.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click', ()=>{ location.hash = b.dataset.tab; window.scrollTo(0,0); }));
+document.addEventListener('click', e=>{
+  const b = e.target.closest('[data-open]');
+  if (b && !b.disabled) go(b.dataset.open);
+});
+document.getElementById('lib').addEventListener('input', e=>{
+  if (e.target.id !== 'lib-weight') return;
+  const v = parseFloat(e.target.value); if (!(v > 0)) return;
+  document.getElementById('weight').value = v;
+  render();
+});
+sheet.addEventListener('click', e=>{
+  if (e.target.closest('#s-back')) { back(); return; }
+  const cb = e.target.closest('#s-copy');
+  if (cb) {
+    const pre = document.getElementById('s-order');
+    const done = ()=>{ cb.textContent = '복사했어요 ✓'; setTimeout(()=>{ cb.textContent = '간호사 지시문 복사'; }, 1600); };
+    const fallback = ()=>{ const rg = document.createRange(); rg.selectNodeContents(pre); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(rg); cb.textContent = '선택됨 — 길게 눌러 복사'; };
+    try { navigator.clipboard.writeText(pre.textContent).then(done, fallback); } catch(err) { fallback(); }
+  }
+});
+sheet.addEventListener('change', e=>{
+  const t = e.target;
+  if (t.dataset && t.dataset.c){
+    const v = parseFloat(t.value);
+    setC(t.dataset.c, (v > 0 && v !== +t.dataset.def) ? v : 0);
+    render();
+    const p = pageFor(location.hash.slice(1)); if (p) showPage(p, true);
+  } else if (t.dataset && t.dataset.vaso){
+    vasoState[t.dataset.vaso] = t.value;
+    const p = pageFor(location.hash.slice(1)); if (p) showPage(p, true);
+  }
+});
+document.addEventListener('keydown', e=>{ if (e.key === 'Escape' && !sheet.hidden) back(); });
+window.addEventListener('hashchange', sync);
+render();
+sync();
+})();
+</script>
+
+
+<a href="../index.html" id="gm-home" aria-label="홈으로" style="position:fixed;right:max(10px,env(safe-area-inset-right));top:calc(10px + env(safe-area-inset-top));z-index:99999;display:flex;align-items:center;gap:6px;padding:7px 11px;border-radius:999px;background:rgba(11,106,119,.92);color:#fff;font:600 12.5px/1 -apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;text-decoration:none;box-shadow:0 4px 14px rgba(0,0,0,.25);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)">
+<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>홈</a>
+<script>if('serviceWorker' in navigator) navigator.serviceWorker.register('../sw.js',{scope:'../'}).catch(()=>{});</script>
+</body>
+</html>
