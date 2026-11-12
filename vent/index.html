@@ -1,0 +1,833 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Vent 파형 도감</title>
+<link rel="manifest" href="../manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="파형 도감">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0B1120">
+<style>
+:root{
+  --bg:#EEF1F6; --surface:#FFFFFF; --ink:#141B2B; --muted:#5B6578; --line:#D6DCE6;
+  --accent:#3559C7; --accent-ink:#FFFFFF; --accent-soft:#E3E9FA;
+  --ok:#1C7A4B; --ok-soft:#E2F3E9; --bad:#B3261E; --bad-soft:#FBE8E6;
+  --sans:-apple-system, "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  --mono:ui-monospace, "SF Mono", Menlo, monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#0B1120; --surface:#131B2E; --ink:#E5EAF3; --muted:#94A0B6; --line:#26314A;
+  --accent:#8FA8FF; --accent-ink:#0B1120; --accent-soft:#1D2A4D;
+  --ok:#5DCB91; --ok-soft:#14301F; --bad:#FF8B80; --bad-soft:#3A1D1B; color-scheme:dark}}
+[hidden]{display:none!important}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.55;
+  padding-top:calc(env(safe-area-inset-top,0px) + 12px);padding-bottom:calc(env(safe-area-inset-bottom,0px) + 32px);
+  padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:max(14px,env(safe-area-inset-right,0px))}
+.wrap{max-width:980px;margin:0 auto;display:grid;gap:14px}
+header{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+h1{font-size:1.3rem;margin:0}
+.seg{display:inline-flex;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:3px}
+.seg button{background:transparent;color:var(--muted);border:0;padding:7px 14px;border-radius:7px;font-weight:600}
+.seg button.on{background:var(--accent);color:var(--accent-ink)}
+button{font:inherit;cursor:pointer}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.chips{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:6px 12px;font-size:.85rem;font-weight:600;white-space:nowrap}
+.chip small{color:var(--muted);font-weight:500;margin-left:4px}
+.chip.on{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.chip.on small{color:inherit;opacity:.8}
+
+.monitor{background:#070B14;border-radius:14px;padding:12px 12px 8px;color:#C9D3E6;border:1px solid #1B2438}
+.mon-head{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;justify-content:space-between;margin-bottom:6px;font-family:var(--mono);font-size:.8rem}
+.mode{color:#fff;font-weight:700;background:#1E2A44;border-radius:6px;padding:2px 8px}
+.readout{display:flex;flex-wrap:wrap;gap:4px 14px}
+.readout span b{color:#fff;font-weight:600}
+.readout .hid{color:#EB8CE0}
+canvas{display:block;width:100%;touch-action:pan-y}
+.mon-foot{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.tg{border:1px solid #2A3654;background:#0F1626;color:#C9D3E6;border-radius:8px;padding:6px 10px;font-size:.82rem;font-weight:600}
+.tg.on{background:#22305A;border-color:#5C78D6;color:#fff}
+.tg .sw{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;vertical-align:0}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:18px;display:grid;gap:14px}
+@media (max-width:480px){.card{padding:15px 13px}}
+.title{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px}
+h2{font-size:1.2rem;margin:0}
+.en{color:var(--muted);font-size:.85rem}
+.tag{font-family:var(--mono);font-size:.72rem;border:1px solid var(--line);border-radius:5px;padding:1px 6px;color:var(--muted)}
+.one{margin:0;font-weight:600}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+.sec{display:grid;gap:6px;align-content:start}
+h3{font-size:.74rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin:0}
+.sec ul,.sec ol{margin:0;padding-left:1.15em;display:grid;gap:3px}
+.sec.fix ol li::marker{color:var(--accent);font-weight:700}
+.pit{background:var(--bad-soft);border-radius:10px;padding:10px 12px;font-size:.9rem}
+.pit b{color:var(--bad)}
+.nav{display:flex;justify-content:space-between;gap:8px}
+.btn{border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:9px;padding:10px 14px;font-weight:600}
+.btn.go{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn:disabled{opacity:.35}
+.quizq{font-weight:700;font-size:1.05rem;margin:0}
+.choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px}
+.choice{text-align:left;border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:11px 13px;font-weight:600}
+.choice.right{border-color:var(--ok);background:var(--ok-soft)}
+.choice.wrong{border-color:var(--bad);background:var(--bad-soft)}
+.score{font-family:var(--mono);font-size:.85rem;color:var(--muted)}
+.hint{font-size:.82rem;color:var(--muted);margin:0}
+#asvBox{border-top:1px solid #1B2438;margin-top:8px;padding-top:8px}
+.asv-cap{font-family:var(--mono);font-size:.78rem;color:#C9D3E6;display:flex;flex-wrap:wrap;gap:4px 14px;margin-bottom:4px}
+.asv-cap b{color:#fff}
+.sec.good h3{color:var(--ok)} .sec.bad h3{color:var(--bad)}
+.how{background:var(--accent-soft);border-radius:10px;padding:10px 12px;font-size:.9rem}
+.how ul{margin:4px 0 0;padding-left:1.1em}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* ---------- Hold 측정 탭 ---------- */
+:root{--warn:#A35F00}
+@media (prefers-color-scheme: dark){:root{--warn:#F2B35B}}
+.tblw{overflow-x:auto}
+.tbl{width:100%;border-collapse:collapse;font-size:.88rem}
+.tbl th,.tbl td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+.tbl th{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.tbl td:first-child{white-space:nowrap;font-weight:700}
+.tbl td:nth-child(2){white-space:nowrap;font-family:var(--mono)}
+.lv{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:1px}
+.lv.ok{background:var(--ok)}.lv.warn{background:var(--warn)}.lv.bad{background:var(--bad)}
+.fx{font-family:var(--mono);font-size:.85rem;background:var(--bg);border-radius:8px;padding:9px 11px;display:grid;gap:4px}
+.calc-in{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+@media (min-width:600px){.calc-in{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.calc-in label{display:grid;gap:3px;font-size:.8rem;color:var(--muted);font-weight:700}
+.calc-in label small{font-weight:500}
+.calc-in input{font:inherit;font-size:1.1rem;font-family:var(--mono);padding:9px 10px;border:1.5px solid var(--line);border-radius:9px;background:var(--bg);color:var(--ink);width:100%}
+.calc-in input:focus{outline:2px solid var(--accent);outline-offset:0;border-color:var(--accent)}
+.res{display:grid;gap:7px}
+.res-row{display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:baseline;padding:9px 12px;border-radius:10px;border-left:4px solid var(--line);background:var(--bg)}
+.res-row.ok{border-left-color:var(--ok)}.res-row.warn{border-left-color:var(--warn)}.res-row.bad{border-left-color:var(--bad)}
+.res-row .nm{font-weight:700}
+.res-row b{font-family:var(--mono);font-size:1.15rem}
+.res-row b small{font-size:.75rem;color:var(--muted);font-weight:500;margin-left:3px}
+.res-row .ms{grid-column:1/-1;font-size:.86rem;color:var(--muted)}
+.res-row.ok .ms{color:var(--ok)}.res-row.warn .ms{color:var(--warn)}.res-row.bad .ms{color:var(--bad)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Vent 파형 도감</h1>
+    <div class="seg" role="tablist">
+      <button type="button" data-tab="atlas" class="on">도감</button>
+      <button type="button" data-tab="quiz">퀴즈</button>
+      <button type="button" data-tab="adv">Advanced</button>
+      <button type="button" data-tab="hold">Hold 측정</button>
+    </div>
+  </header>
+
+  <div class="chips" id="chips"></div>
+
+  <section class="monitor" aria-label="인공호흡기 파형">
+    <div class="mon-head">
+      <span class="mode" id="mode">PSV</span>
+      <div class="readout" id="readout"></div>
+    </div>
+    <canvas id="cv" height="300"></canvas>
+    <div id="asvBox" hidden><div class="asv-cap" id="asvCap"></div><canvas id="asv" height="200"></canvas><div class="mon-foot" id="lungs"></div></div>
+    <div class="mon-foot">
+      <button type="button" class="tg" id="tgAnn"><span class="sw" style="background:#FF6B6B"></span>단서 표시</button>
+      <button type="button" class="tg" id="tgPmus"><span class="sw" style="background:#EB8CE0"></span>환자 effort (Pmus)</button>
+      <button type="button" class="tg" id="tgReplay">▶ 다시 그리기</button>
+    </div>
+  </section>
+
+  <section class="card" id="info"></section>
+</div>
+
+<script>
+(function(){
+/* ---------- physiology simulator: single-compartment lung + patient Pmus + ventilator logic ---------- */
+function rng(seed){let s=seed>>>0;return()=>{s=(s*1664525+1013904223)>>>0;return s/4294967296}}
+function simulate(cfg){
+  const p=Object.assign({mode:'PSV',R:10,C:0.05,PEEP:5,P:10,Ti:1.0,RR:0,ETS:0.25,rise:0.08,trig:0.033,Rv:1.2,pCycle:3,
+    card:0,HR:100,dur:16,show:10,eff:null,entrain:null,seed:7,lag:0.03,refr:0.12,Rexp:1.5},cfg);
+  const dt=0.004, efforts=[], breaths=[];
+  if(p.eff){const r=rng(p.seed);let t=p.eff.first??0.6;while(t<p.dur){efforts.push({s:t,Ti:p.eff.Ti,A:p.eff.A,relax:p.eff.relax??0.35,ex:p.eff.ex||0,exDur:p.eff.exDur||0.6});t+=p.eff.period*(1+(p.eff.jitter||0)*(r()-0.5)*2)}}
+  const pmusAt=t=>{let s=0;for(const e of efforts){const u=t-e.s;if(u<0||u>e.Ti+Math.max(e.relax,e.exDur)+0.05)continue;
+      if(u<e.Ti)s+=e.A*Math.sin(Math.PI/2*u/e.Ti);else if(u<e.Ti+e.relax)s+=e.A*Math.cos(Math.PI/2*(u-e.Ti)/e.relax);
+      if(e.ex&&u>=e.Ti&&u<e.Ti+e.exDur)s-=e.ex*Math.sin(Math.PI*(u-e.Ti)/e.exDur);}return s};
+  let V=0,phase='exp',tI=0,tE=-1,peak=0,tLast=-99,cur=null,pend=null;
+  const T=[],PAW=[],FLOW=[],VOL=[],PM=[];
+  const startInsp=(t,type)=>{phase='insp';pend=null;tI=t;tLast=t;peak=0;cur={s:t,type,v0:V};breaths.push(cur);
+    if(p.entrain&&type==='time')efforts.push({s:t+p.entrain.delay,Ti:p.entrain.Ti,A:p.entrain.A,relax:0.3,ex:0,exDur:0,entrained:true});};
+  const endInsp=(t,why)=>{phase='exp';tE=t;cur.e=t;cur.vt=V-cur.v0;cur.why=why;cur.peak=peak};
+  for(let i=0,t=0;t<p.dur;i++,t=i*dt){
+    const pm=pmusAt(t), Palv=p.PEEP+V/p.C-pm;
+    let paw,flow;
+    if(phase==='exp'){
+      flow=(p.PEEP-Palv)/(p.R+p.Rexp);paw=p.PEEP-p.Rexp*flow;
+      const meas=flow+p.card*Math.sin(2*Math.PI*p.HR/60*t);
+      if(p.trig>0&&t-tE>p.refr&&meas>p.trig) startInsp(t,'trig');
+      else if(p.RR>0&&t-tLast>=60/p.RR) startInsp(t,'time');
+      flow=meas;
+    }else{
+      const ti=t-tI,target=p.PEEP+p.P,cmd=p.PEEP+p.P*Math.min(1,ti/p.rise);
+      flow=(cmd-Palv)/(p.R+p.Rv);paw=cmd-p.Rv*flow;if(flow<0){flow=0;paw=Palv}
+      if(flow>peak)peak=flow;
+      if(p.mode==='PCV'){if(ti>=p.Ti)endInsp(t,'time')}
+      else{if(pend===null&&((ti>0.12&&flow<p.ETS*peak)||ti>3))pend=t+p.lag;if(pend!==null&&t>=pend)endInsp(t,'flow')}
+      if(phase==='insp'&&paw>target+p.pCycle)endInsp(t,'pressure');
+      if(p.card)flow+=p.card*Math.sin(2*Math.PI*p.HR/60*t);
+    }
+    V+=( (phase==='insp'||true)? (flow-(p.card?p.card*Math.sin(2*Math.PI*p.HR/60*t):0)) :0)*dt;
+    if(i%2===0){T.push(t);PAW.push(paw);FLOW.push(flow*60);VOL.push(V*1000);PM.push(pm)}
+  }
+  if(cur&&cur.e===undefined){cur.e=p.dur;cur.vt=V-cur.v0}
+  // classify
+  for(const b of breaths){if(b.type==='trig'){b.eff=efforts.find(e=>b.s>=e.s-0.02&&b.s<=e.s+e.Ti+0.2);if(!b.eff)b.type='auto'}}
+  for(const e of efforts){e.trig=breaths.find(b=>b.type!=='time'&&b.s>=e.s-0.02&&b.s<=e.s+e.Ti);
+    e.inInsp=breaths.some(b=>e.s>b.s&&e.s<b.e);}
+  const t0=p.dur-p.show;
+  return {p,T,PAW,FLOW,VOL,PM,efforts,breaths,t0,t1:p.dur};
+}
+
+/* ---------- scenarios ---------- */
+const S=[
+{id:'normal-psv',name:'정상 PSV',en:'Normal pressure support',mode:'PSV',
+ cfg:{mode:'PSV',R:10,C:0.05,P:10,PEEP:5,ETS:0.25,eff:{period:4,Ti:1.0,A:5}},
+ one:'비교 기준이 되는 정상 PSV 파형이야.',
+ clues:['환자 effort 1번 = breath 1번','Paw: 설정 압력까지 빠르게 올라가서 평평한 사각형','흡기 flow: 빠르게 peak → 감속 → peak의 25%에서 종료','호기 flow: 다음 흡기 전에 0으로 복귀'],
+ cause:[],fix:[],pit:null,ann:()=>[]},
+{id:'normal-pcv',name:'정상 PCV',en:'Normal pressure control (passive)',mode:'PCV',
+ cfg:{mode:'PCV',R:10,C:0.05,P:15,PEEP:5,Ti:1.0,RR:15,trig:0.033},
+ one:'환자 effort 없는 passive PCV 파형이야.',
+ clues:['Breath 간격이 설정 RR대로 일정','Paw: 사각형, Ti 동안 유지','흡기 flow: Ti 끝 전에 0에 도달 (흡기 끝 flow 0 = Ppeak ≈ Pplat)','호기 flow: 다음 breath 전에 0으로 복귀'],
+ cause:[],fix:[],pit:null,ann:()=>[]},
+{id:'ineffective',name:'Ineffective effort',en:'Missed trigger · wasted effort',mode:'PSV',
+ cfg:{mode:'PSV',R:20,C:0.06,P:16,PEEP:5,ETS:0.25,eff:{period:1.9,Ti:0.6,A:6,jitter:0.05},seed:3},
+ one:'환자는 숨을 쉬려 했는데 기계가 못 알아챈 거야. 가장 흔한 PVD야.',
+ clues:['호기 flow가 0으로 안 돌아오고 다음 breath가 시작됨 → auto-PEEP','호기 flow 중간에 위(0 쪽)로 튀는 notch + 같은 시점 Paw 미세 dip, breath는 없음','흉곽 움직임 수 > 화면 RR'],
+ cause:['Auto-PEEP: COPD·천식, 큰 Vt, 높은 PS, 긴 Ti','과진정, 약한 흡기근','Trigger가 너무 둔함'],
+ fix:['PS 낮추기 → Vt↓, 호기 시간 확보','ETS 올리기 (COPD 40–50%) → Ti↓ Te↑','External PEEP = 측정 auto-PEEP의 70–80%','Trigger 예민하게','진정 줄이기'],
+ pit:'<b>PS를 올리면 더 나빠져.</b> 교정 후 화면 RR이 오르는 건 버려지던 effort가 인식된 거라 호전이야.',
+ ann:A=>A.missed('missed')},
+{id:'delay',name:'Trigger delay',en:'Delayed triggering',mode:'PSV',
+ cfg:{mode:'PSV',R:22,C:0.06,P:14,PEEP:5,ETS:0.3,trig:0.05,eff:{period:2.6,Ti:1.0,A:8},seed:5},
+ one:'환자 effort가 시작되고 한참 뒤에야 기계가 반응해.',
+ clues:['흡기 직전 호기 flow가 0으로 서서히 올라오는 "끌어당기는" 구간','흡기 시작 직전 Paw가 PEEP 아래로 dip','Pmus를 켜 보면 effort 시작과 flow 시작 사이 간격이 보임'],
+ cause:['Auto-PEEP (threshold load)','Trigger sensitivity 둔함 (flow 5 L/min 등)','약한 effort, 회로 leak'],
+ fix:['Trigger 예민하게 (flow 1–2 L/min)','Auto-PEEP 있으면 ext PEEP, PS↓, ETS↑','진정 줄이기'],
+ pit:'Delay가 길어지면 결국 ineffective effort가 돼. 같은 스펙트럼이야.',
+ ann:A=>A.delay()},
+{id:'auto',name:'Auto-triggering',en:'Auto-trigger',mode:'PCV',
+ cfg:{mode:'PCV',R:8,C:0.05,P:10,PEEP:5,Ti:0.8,RR:12,trig:0.02,card:0.09,HR:96},
+ one:'환자 effort 없이 기계가 스스로 breath를 줘.',
+ clues:['Breath 직전 Paw dip(환자 effort 흔적)이 없음','호기 끝 flow에 심박 리듬의 잔물결','설정 RR보다 훨씬 빠르고 규칙적인 RR'],
+ cause:['Trigger 과민','Leak: cuff, chest tube bubbling, 회로 분리','회로 내 물(condensate)','Cardiac oscillation: 낮은 drive + 큰 심박출량'],
+ fix:['회로 점검 · 물 제거 · leak 확인','Trigger 둔하게','Flow trigger → pressure trigger','Leak compensation 켜기'],
+ pit:'<b>뇌사 apnea test에서 자발호흡으로 오인</b>하는 고전적 함정. 과환기·알칼리증도 생겨.',
+ ann:A=>A.auto()},
+{id:'starve',name:'Flow starvation',en:'Flow asynchrony · under-assist',mode:'PSV',
+ cfg:{mode:'PSV',R:8,C:0.04,P:7,PEEP:5,ETS:0.35,rise:0.5,Rv:8,eff:{period:2.4,Ti:1.0,A:22,relax:0.8}},
+ one:'환자 요구 flow > 기계가 주는 flow. 환자가 일을 다 하고 있어.',
+ clues:['흡기 초 Paw가 PEEP 아래로 떨어진 뒤 오목하게(scooped) 늦게 올라감','흡기 flow가 처음보다 나중에 커짐 (환자가 끌어당김)','빈호흡, 보조근 사용'],
+ cause:['Rise time 너무 김','PS/Pinsp 낮음','높은 drive: 산증, 통증, 열, 불안'],
+ fix:['Rise time 짧게','PS(Pinsp) 올리기','Drive 교정','지속되면 PAV+ / NAVA'],
+ pit:'VCV라면 peak flow↑ 또는 PC/PS 전환. 단, flow만 올리면 Ti가 짧아져 double trigger로 넘어갈 수 있어.',
+ ann:A=>A.starve()},
+{id:'premature',name:'Premature cycling',en:'Ventilator Ti < neural Ti',mode:'PSV',
+ cfg:{mode:'PSV',R:8,C:0.025,P:12,PEEP:8,ETS:0.5,eff:{period:3,Ti:1.1,A:4.5}},
+ one:'환자는 아직 들이쉬는데 기계가 먼저 흡기를 끝냈어.',
+ clues:['흡기가 짧게 끊긴 직후 호기 flow가 다시 0 쪽(위)으로 솟음','호기 초 Paw가 PEEP 아래로 dip','더 심하면 바로 두 번째 breath (double trigger)'],
+ cause:['ETS 너무 높음','Stiff lung (ARDS): 짧은 time constant → flow 급감','PCV Ti 짧음, 높은 drive, leak'],
+ fix:['ETS 낮추기 (ARDS 10–15%)','PCV면 Ti 늘리기','PS 올리기','Drive 교정'],
+ pit:'방치하면 double trigger → 쌓인 Vt로 volutrauma.',
+ ann:A=>A.premature()},
+{id:'double',name:'Double triggering',en:'Breath stacking',mode:'PCV',
+ cfg:{mode:'PCV',R:8,C:0.03,P:14,PEEP:10,Ti:0.6,RR:14,trig:0.033,eff:{period:3.2,Ti:1.6,A:24}},
+ one:'Effort 1번에 breath 2번. Vt가 두 배로 쌓여.',
+ clues:['첫 breath 직후 호기가 거의 없이 두 번째 breath','Volume이 계단식으로 쌓임 (설정 Vt의 ~2배)','High Vt 알람, Pplat 상승'],
+ cause:['Neural Ti > 기계 Ti','높은 drive + 낮은 Vt/짧은 Ti (ARDS, 패혈증, 산증)','Reverse triggering'],
+ fix:['Ti 늘리기','PSV면 ETS 낮추기','Pplat 허용 범위에서 Pinsp(Vt) 올리기','Drive 교정 먼저: 해열, 진통, 산증','지속 + Pplat > 30 → 진정 · 단기 NMB'],
+ pit:'<b>Lung-protective 설정이 무력화</b>돼. 설정 Vt를 조금 올려 stacking을 없애면 실제 Vt는 오히려 줄어.',
+ ann:A=>A.double()},
+{id:'delayed',name:'Delayed cycling',en:'Ventilator Ti > neural Ti',mode:'PSV',
+ cfg:{mode:'PSV',R:24,C:0.06,P:18,PEEP:5,ETS:0.05,lag:0.12,eff:{period:3.6,Ti:0.6,A:5,ex:14,exDur:0.9}},
+ one:'환자는 이미 흡기를 멈췄는데 기계가 계속 넣어.',
+ clues:['흡기 후반 flow가 갑자기 꺾임 (knee)','흡기 끝 Paw spike (설정압보다 위)','침상: 흡기 끝 복근 수축 촉지'],
+ cause:['ETS 너무 낮음','PS 높음','COPD: 긴 time constant → flow 감속 느림','PCV Ti 너무 김'],
+ fix:['ETS 올리기 (COPD 40–50%)','PS 낮추기','PCV면 Ti 줄이기'],
+ pit:'Te↓ → auto-PEEP → <b>ineffective effort</b>로 이어져. 둘은 한 세트야.',
+ ann:A=>A.delayed()},
+{id:'reverse',name:'Reverse triggering',en:'Entrainment',mode:'PCV',
+ cfg:{mode:'PCV',R:10,C:0.035,P:14,PEEP:8,Ti:0.9,RR:16,trig:0.033,entrain:{delay:0.45,Ti:1.1,A:18}},
+ one:'기계 breath가 먼저 오고, 그게 환자 횡격막 수축을 유발해.',
+ clues:['Time breath 시작 후 시간차를 두고 effort → 흡기 후반 flow 혹, Paw dip','Effort가 Ti보다 길면 바로 이어지는 stacked breath','일정 비율(1:1)로 반복'],
+ cause:['깊은 진정 + controlled mode','ARDS 초기','NMB 회복기'],
+ fix:['진정 얕게','RR 또는 Ti 변경 (entrainment 깨기)','PSV 전환','중증 ARDS + stacking → NMB'],
+ pit:'Stacking되면 double trigger와 같은 위험. 순서(기계 → 환자)로 구분해.',
+ ann:A=>A.reverse()}
+];
+
+/* ---------- advanced-mode simulator ---------- */
+function simAdv(cfg){
+  const p=Object.assign({mode:'PRVC',R:10,C:0.05,Cfn:null,PEEP:5,RR:15,Ti:1.0,ETS:0.25,rise:0.08,trig:0.033,Rv:1.0,Rexp:1.5,VtT:0.5,P0:10,Pmax:35,Pmin:2,
+    g:0.7,level:2.0,nme:0.8,minFlow:0.4,apnea:5,lag:0.03,refr:0.15,pct:100,ibw:70,dur:24,show:18,effs:[]},cfg);
+  const dt=0.004,efforts=[],breaths=[];let asv=null;
+  for(const g of p.effs){let k=0;for(let t=g.from;t<Math.min(g.to,p.dur);t+=g.period,k++){const A=Array.isArray(g.A)?g.A[Math.min(k,g.A.length-1)]:g.A;efforts.push({s:t,Ti:g.Ti,A,relax:0.35})}}
+  const drive=t=>{let s=0;for(const e of efforts){const u=t-e.s;if(u<0||u>e.Ti+e.relax)continue;s+=u<e.Ti?e.A*Math.sin(Math.PI/2*u/e.Ti):e.A*Math.cos(Math.PI/2*(u-e.Ti)/e.relax)}return s};
+  if(p.mode==='ASV'){
+    const a=2*Math.PI*Math.PI/60,RCe=p.R*p.C,MV=p.pct/100*0.1*p.ibw,Vd=0.0022*p.ibw,vtMin=0.0044*p.ibw,vtMax=0.015*p.ibw,fmax=Math.min(60,60/(3*RCe));
+    let f=15;for(let i=0;i<40;i++){const VA=Math.max(0.5,MV-f*Vd);f=(Math.sqrt(1+2*a*RCe*VA/Vd)-1)/(a*RCe)}
+    f=Math.min(fmax,Math.max(5,f));let Vt=MV/f;if(Vt<vtMin){Vt=vtMin;f=MV/Vt}if(Vt>vtMax){Vt=vtMax;f=MV/Vt}
+    p.RR=f;p.VtT=Vt;p.Ti=Math.min(2,Math.max(RCe,60/f*0.33));asv={MV,Vd,RCe,f,Vt,fmax,vtMin,vtMax};
+  }
+  let V=0,phase='exp',tI=0,tE=-1,tLast=-99,peak=0,cur=null,pend=null,Pb=p.P0,state='control',sub=null,eaPk=0,eaPrev=0;
+  const T=[],PAW=[],FLOW=[],VOL=[],PM=[],EA=[];
+  const adaptive=['PRVC','VS','ASV','AUTO'].includes(p.mode);
+  const start=(t,type)=>{
+    let kind;
+    if(p.mode==='PRVC')kind='pc';else if(p.mode==='VS'||p.mode==='VAPS')kind='ps';else if(p.mode==='PAV')kind='pav';else if(p.mode==='NAVA')kind='nava';
+    else if(p.mode==='ASV')kind=type==='time'?'pc':'ps';
+    else{if(state==='control'&&type==='trig')state='support';kind=state==='control'?'pc':'ps'}
+    phase='insp';tI=t;tLast=t;peak=0;pend=null;sub=null;eaPk=0;
+    cur={s:t,type,kind,P:Pb,v0:V,state,pmPk:0,pawPk:0};breaths.push(cur);
+  };
+  const end=t=>{phase='exp';tE=t;cur.e=t;cur.vt=V-cur.v0;
+    if(adaptive&&cur.vt>0.02){const Cest=cur.vt/Math.max(1,cur.P),need=p.VtT/Cest;Pb=Math.min(p.Pmax-p.PEEP,Math.max(p.Pmin,Pb+Math.max(-3,Math.min(3,need-Pb))))}};
+  for(let i=0,t=0;t<p.dur;i++,t=i*dt){
+    const C=p.Cfn?p.Cfn(t):p.C,E=1/C,d=drive(t);
+    const ea=p.mode==='NAVA'?1+d:0,pm=p.mode==='NAVA'?p.nme*d:d;
+    const Palv=p.PEEP+V*E-pm;let paw,flow;
+    if(phase==='exp'){
+      flow=(p.PEEP-Palv)/(p.R+p.Rexp);paw=p.PEEP-p.Rexp*flow;
+      const can=t-tE>p.refr;
+      const pt=can&&(flow>p.trig||(p.mode==='NAVA'&&ea-1>0.5&&ea>eaPrev));
+      if(pt)start(t,'trig');
+      else if((p.mode==='PRVC'||p.mode==='ASV'||(p.mode==='AUTO'&&state==='control'))&&t-tLast>=60/p.RR)start(t,'time');
+      else if(p.mode==='AUTO'&&state==='support'&&t-tLast>p.apnea){state='control';start(t,'time')}
+    }else{
+      const ti=t-tI;
+      if(cur.kind==='pc'||cur.kind==='ps'){
+        const cmd=p.PEEP+Pb*Math.min(1,ti/p.rise);
+        if(sub==='vol'){flow=p.minFlow;paw=Palv+p.R*flow;if(V-cur.v0>=p.VtT){end(t)}}
+        else{
+          flow=(cmd-Palv)/(p.R+p.Rv);paw=cmd-p.Rv*flow;if(flow<0){flow=0;paw=Palv}
+          if(flow>peak)peak=flow;
+          if(cur.kind==='pc'){if(ti>=p.Ti)end(t)}
+          else{
+            if(p.mode==='VAPS'&&ti>0.1&&flow<=p.minFlow&&V-cur.v0<p.VtT){sub='vol';cur.topup=t}
+            else{if(pend===null&&((ti>0.12&&flow<p.ETS*peak)||ti>3))pend=t+p.lag;if(pend!==null&&t>=pend)end(t)}
+          }
+          if(phase==='insp'&&sub!=='vol'&&paw>p.PEEP+Pb+3)end(t);
+        }
+      }else if(cur.kind==='pav'){
+        flow=(pm/(1-p.g)-E*V)/p.R;if(flow<0)flow=0;paw=p.PEEP+p.g*(p.R*flow+E*V);
+        if(flow>peak)peak=flow;if(ti>0.15&&flow<0.05*peak)end(t);
+      }else{ // nava
+        paw=p.PEEP+p.level*Math.max(0,ea-1);flow=(paw-Palv)/p.R;if(flow<0){flow=0;paw=Math.max(paw,Palv)}
+        if(ea>eaPk)eaPk=ea;if(ti>0.1&&ea<eaPrev&&ea-1<0.7*(eaPk-1))end(t);
+      }
+      if(cur&&cur.e===undefined){cur.pmPk=Math.max(cur.pmPk,pm);cur.pawPk=Math.max(cur.pawPk,paw)}
+    }
+    eaPrev=ea;V+=flow*dt;
+    if(i%2===0){T.push(t);PAW.push(paw);FLOW.push(flow*60);VOL.push(V*1000);PM.push(pm);EA.push(ea)}
+  }
+  if(cur&&cur.e===undefined){cur.e=p.dur;cur.vt=V-cur.v0}
+  for(const e of efforts)e.trig=breaths.find(b=>b.type==='trig'&&b.s>=e.s-0.02&&b.s<=e.s+e.Ti);
+  return {p,T,PAW,FLOW,VOL,PM,EA:p.mode==='NAVA'?EA:null,efforts,breaths,t0:p.dur-p.show,t1:p.dur,adv:true,asv};
+}
+const LUNG={normal:{R:10,C:0.05,l:'정상'},ards:{R:8,C:0.03,l:'ARDS'},copd:{R:20,C:0.06,l:'COPD'}};
+const ADV=[
+{id:'prvc',name:'PRVC',en:'Adaptive pressure control (PRVC · VC+ · APV-CMV)',pm:false,
+ cfg:{mode:'PRVC',R:10,C:0.05,Cfn:t=>t<15?0.05:0.03,PEEP:5,RR:20,Ti:0.9,VtT:0.5,P0:7,dur:30,show:22},
+ set:p=>`목표 Vt ${p.VtT*1000} · PEEP ${p.PEEP} · RR ${p.RR} · Ti ${p.Ti}s`,
+ one:'Volume 목표 + pressure control breath. 다음 breath의 압력을 기계가 자동으로 조절해.',
+ watch:['빨간 구간에서 compliance가 떨어지면 Vt가 먼저 줄어','그다음 breath마다 Pinsp가 최대 +3씩 올라가 목표 Vt를 회복','Paw 사각형 + 감속 flow는 PCV와 같아'],
+ how:['첫 test breath → 필요압의 75% → 이후 breath당 ±3 cmH₂O','압력 상한: Servo 상한 알람 −5, Hamilton −10, Dräger 직접 설정'],
+ indic:['Vt 보장이 필요한 controlled ventilation','Compliance가 변하는 환자 (수술 후, 흉수 배액, 회복기)','PCV의 감속 flow와 Vt 보장을 같이 원할 때'],
+ contra:['높은 drive, 대사성 산증 (air hunger 악화)','큰 leak (Vt 측정 부정확)','엄격한 Vt 상한이 필요할 때 (환자가 당기면 목표 초과)'],
+ limits:['Inverse response: effort↑ → 압력↓ → 환자 일↑','직전 breath 기준이라 effort가 불규칙하면 Vt 출렁, asynchrony','Auto-PEEP 유발·악화 가능','압력 자동 상승이 악화(plug, 기흉)를 가림'],
+ mon:['Pinsp 추세 (상승 = compliance↓)','"Pressure limited" 알람','Vte 변동, auto-PEEP, 환자 effort'],
+ wean:['Pinsp가 저절로 하강','VS나 Automode로 전환'],
+ ann:A=>A.band(15,15.6,'compliance↓','bad').concat(A.plab(b=>'P'+Math.round(b.P)),A.vlab())},
+{id:'vs',name:'Volume Support',en:'PS + volume guarantee',pm:true,
+ cfg:{mode:'VS',R:10,C:0.05,PEEP:5,VtT:0.5,P0:10,ETS:0.25,effs:[{from:0.5,to:40,period:3,Ti:1.0,A:[2,2,3,4,6,8,10,12,13,14]}],dur:30,show:22},
+ set:p=>`목표 Vt ${p.VtT*1000} · PEEP ${p.PEEP} · ETS ${Math.round(p.ETS*100)}%`,
+ one:'PS + volume 보장. 자발호흡 모드라 모든 breath를 환자가 trigger해.',
+ watch:['환자 effort(Pmus)가 점점 커지면 Vt가 목표를 넘어','그러면 기계는 breath마다 PS를 깎아 (P 숫자 하강)','지원압이 낮아져서 호전처럼 보이지만 실제로는 환자가 일을 다 하는 중이야 (inverse response)'],
+ how:['PRVC와 같은 알고리즘으로 breath 사이에서 PS 조정','Flow cycle (ETS), 무호흡이면 backup'],
+ indic:['회복기·weaning 단계에서 Vt 보장 필요','Drive나 역학이 출렁이는 환자, 약한 호흡근'],
+ contra:['큰 leak: cuff leak, BPF, 기흉 (Vt 오측정 → 압력 폭주)','신뢰할 drive 없음 → apnea backup 필수'],
+ limits:['Inverse response: 빈호흡과 과도한 effort가 "낮은 지원압"으로 가려짐','목표 Vt를 낮춰 weaning하면 문제를 덮음'],
+ mon:['지원압 = Ppeak − PEEP 추세 (상승 = 악화 알람)','RR, RSBI, 보조근을 지원압과 함께','Vt, VE, EtCO₂'],
+ wean:['목표 Vt는 그대로 두고 지원압이 저절로 떨어지게','PEEP 5에서 지원압 ≤ 8 + RR·RSBI 안정 → SBT'],
+ ann:A=>A.plab(b=>'PS '+Math.round(b.P)).concat(A.vlab())},
+{id:'vaps',name:'VAPS',en:'Volume-assured pressure support',pm:true,
+ cfg:{mode:'VAPS',R:10,C:0.05,PEEP:5,P0:8,VtT:0.5,minFlow:0.4,ETS:0.25,effs:[{from:0.5,to:40,period:3,Ti:1.0,A:[9,2,8,3,9,2,8,3]}],dur:20,show:15},
+ set:p=>`PS ${p.P0} · 목표 Vt ${p.VtT*1000} · 최소 flow ${Math.round(p.minFlow*60)} L/min`,
+ one:'한 breath 안에서 PS로 시작하고, Vt가 모자라면 constant flow로 마저 채워.',
+ watch:['강한 effort breath는 PS만으로 목표 Vt에 도달해서 일반 PS처럼 끝나','약한 effort breath는 flow가 최소 flow로 떨어지면 평평한 flow로 바뀌어 (빨간 구간)','그 구간에서 Paw가 올라가고 Ti가 길어져'],
+ how:['설정: PS, 목표 Vt, 최소 peak flow','Flow가 최소 flow까지 감속했는데 Vt 미달 → volume control로 전환'],
+ indic:['Effort 변동이 큰 환자에서 breath별 Vt 보장','Peak 압력↓, WOB↓, 진정↓ 목적'],
+ contra:['심한 airflow obstruction (Ti 연장 → air trapping)'],
+ limits:['보충 breath에서 Ti 연장, auto-PEEP','일부 기종 기능 (Bird, Bear 계열의 pressure augmentation)'],
+ mon:['Peak 압력, Ti, 호기 flow 0 복귀 (air trapping)','보충 breath 비율'],
+ wean:['보충 breath가 줄어들면 PS 하향'],
+ ann:A=>A.topup().concat(A.vlab())},
+{id:'auto',name:'Automode',en:'Dual control · PRVC ↔ VS',pm:true,
+ cfg:{mode:'AUTO',R:10,C:0.05,PEEP:5,RR:15,Ti:1.0,VtT:0.5,P0:10,apnea:5,effs:[{from:8.3,to:18,period:3,Ti:1.0,A:6}],dur:28,show:26},
+ set:p=>`PRVC ↔ VS · 목표 Vt ${p.VtT*1000} · RR ${p.RR} · apnea ${p.apnea}s`,
+ one:'환자가 trigger하면 control → support로, 무호흡이면 다시 control로 자동 전환해.',
+ watch:['초반에는 effort가 없어서 PRVC time breath (파란 구간)','환자가 숨 쉬기 시작해서 첫 trigger가 들어오면 VS support breath (초록 구간)','Effort가 사라지면 apnea time이 지난 뒤 control로 복귀'],
+ how:['짝: VC ↔ VS, PC ↔ PS, PRVC ↔ VS','Trigger timeout(apnea) 설정에 따라 control 복귀 (데모는 5초, 실제 기본값은 더 김)'],
+ indic:['마취 회복, 진정 조절 중','Drive가 들쑥날쑥한 환자 (신경계 질환)','Control → support 전환을 자동화하고 싶을 때'],
+ contra:['무호흡이 잦은데 timeout이 길게 설정된 경우 (저환기 구간)'],
+ limits:['Support 상태에서 무호흡이면 timeout 동안 환기 공백','짝 모드 양쪽 세팅을 모두 확인해야 함'],
+ mon:['현재 상태 표시 (control / support)','Apnea 알람 빈도, EtCO₂'],
+ wean:['Support 상태 유지 시간 증가','VS 지원압 하강 → SBT'],
+ ann:A=>A.states()},
+{id:'pav',name:'PAV+',en:'Proportional assist ventilation plus',pm:true,
+ cfg:{mode:'PAV',R:10,C:0.05,PEEP:5,g:0.7,effs:[{from:0.5,to:40,period:3,Ti:1.0,A:[2,5,3,7,2.5,6,4]}],dur:20,show:15},
+ set:p=>`% support ${Math.round(p.g*100)}% · PEEP ${p.PEEP}`,
+ one:'Pmus에 비례해 압력을 줘. 기계는 증폭기이고 Vt와 RR은 환자가 정해.',
+ watch:['Pmus가 작으면 Paw도 조금, Pmus가 크면 Paw도 크게: 압력이 effort에 비례','Paw가 사각형이 아니라 effort 모양을 따라가','숫자: 위는 Paw 상승폭, 아래는 Pmus peak'],
+ how:['Ptotal = E·V + R·V̇, 4–10 breath마다 300 ms end-insp pause로 C(E)·R 측정','Paw = %support × (E·V + R·V̇)','%support 70% = 기계 70 : 환자 30'],
+ indic:['Intact drive, 회복기·weaning','PSV 불편감, 잦은 PVD, difficult/prolonged weaning','진정을 줄이면서 synchrony 확보'],
+ contra:['큰 leak (runaway: leak을 effort로 오인)','Drive 부재, 과진정','R·E 측정 불가','과도한 drive (대사성 산증) → 과환기'],
+ limits:['Auto-PEEP 구간의 effort는 못 봄 → trigger delay 지속, WOB 과소평가','호흡성 알칼리증','하드 아웃컴 근거 약함'],
+ mon:['WOBpt 0.3–0.7 J/L','%support, Pmus, R·E(C), RR, Vt','P0.1과 flow 파형으로 WOB bar 교차 확인'],
+ wean:['70%로 시작 → 2시간마다 10–20% 감량','20–30%에서 WOB·Vt·RSBI 정상 → conventional SBT'],
+ ann:A=>A.plab(b=>'+'+Math.round(b.pawPk-5)).concat(A.lab('pm',b=>Math.round(b.pmPk)+''))},
+{id:'nava',name:'NAVA',en:'Neurally adjusted ventilatory assist',pm:false,
+ cfg:{mode:'NAVA',R:20,C:0.06,PEEP:5,level:2.0,nme:0.8,effs:[{from:0.5,to:40,period:1.9,Ti:0.6,A:8}],dur:16,show:10},
+ set:p=>`NAVA level ${p.level} cmH₂O/µV · PEEP ${p.PEEP}`,
+ one:'횡격막 전기신호(EAdi)로 trigger, 지원 크기, cycle을 모두 결정해.',
+ watch:['도감의 Ineffective effort와 같은 COPD + auto-PEEP 환자인데, 여기서는 모든 effort가 trigger돼','EAdi는 auto-PEEP 영향을 안 받아서야','Paw 모양 = EAdi 모양 (Paw = level × EAdi), EAdi가 peak의 70%로 떨어지면 cycle'],
+ how:['Paw = NAVA level (cmH₂O/µV) × EAdi','Trigger: EAdi baseline +0.5 µV (pneumatic trigger와 먼저 오는 쪽)','Cycle: EAdi peak의 70%'],
+ indic:['PSV에서 ineffective effort·delayed cycling이 심할 때 (COPD)','NIV, 소아·신생아 (leak이 있어도 trigger 정확)','Difficult weaning에서 synchrony 개선'],
+ contra:['Drive 부재: 깊은 진정, NMB','횡격막신경·횡격막 손상, 고위 경수 손상','식도 catheter 삽입 불가 (식도 수술, 정맥류 등)'],
+ limits:['Catheter 비용, 위치 이탈','Drive가 높으면 그대로 증폭 → 과환기','하드 아웃컴 근거 약함'],
+ mon:['EAdi peak 5–20 µV, EAdi min (tonic)','Catheter 위치 (가운데 lead 보라색)','NVE = Vt / EAdi'],
+ wean:['NAVA level을 낮춰도 EAdi peak가 안정적이면 SBT','낮은 level에서 EAdi가 치솟으면 아직이야'],
+ ann:A=>A.ring('ea','trigger')},
+{id:'asv',name:'ASV',en:'Adaptive support ventilation',pm:false,lung:true,
+ cfg:{mode:'ASV',pct:100,ibw:70,PEEP:5,P0:12,effs:[{from:11,to:40,period:3.3,Ti:0.9,A:6}],dur:28,show:22},
+ set:p=>`%MinVol ${p.pct}% · IBW ${p.ibw} kg · PEEP ${p.PEEP}`,
+ one:'%MinVol 하나만 설정해. 최소 호흡일이 되는 RR과 Vt를 계산해서 PC와 PS를 자동으로 오가.',
+ watch:['초반 passive 구간에서는 목표 RR로 mandatory(PC) breath','환자가 깨어 숨 쉬면 spontaneous(PS) breath로 바뀌고 Pinsp가 내려가','아래 target 그래프: 폐 버튼을 바꾸면 목표점이 움직여. COPD는 느린 RR·큰 Vt, ARDS는 빠른 RR·작은 Vt'],
+ how:['목표 MV = %MinVol × 0.1 L/kg/min (IBW)','Otis 식으로 최소 WOB가 되는 RR 계산 → Vt = MV / RR','안전 박스: Vt 상·하한, Te ≥ 2·RCexp'],
+ indic:['Full support부터 자발호흡까지 한 모드로 (fast-track)','심장수술 후, COPD'],
+ contra:['신생아','큰 leak: NIV, BPF'],
+ limits:['대사 요구↑(패혈증, 산증, 발열)면 100%로는 부족 → ABG로 %MinVol 조정','Active 고drive 환자에서 Pinsp↓ (inverse response)','IBW 입력이 틀리면 목표 전체가 틀림'],
+ mon:['Pinsp, %fSpont, RSBI','RCexp, 호기 flow 0 복귀','ABG·EtCO₂로 %MinVol 검증'],
+ wean:['PEEP 5, %MinVol 100 → 70 → 25%','Pinsp 5–8 + 거의 전부 자발호흡 = PS SBT와 동등'],
+ ann:A=>A.plab(b=>(b.kind==='pc'?'PC ':'PS ')+Math.round(b.P))}
+];
+function advCtx(sim){
+  const {breaths,t0,t1}=sim,inW=t=>t>=t0+0.05&&t<=t1-0.05,bs=breaths.filter(b=>inW((b.s+b.e)/2));
+  return {
+    band:(a,b,l,c)=>[{k:'band',a,b,l,c}],
+    plab:f=>bs.map(b=>({k:'txt',a:b.s,b:b.e,tr:'paw',l:f(b)})),
+    lab:(tr,f)=>bs.map(b=>({k:'txt',a:b.s,b:b.e,tr,l:f(b)})),
+    vlab:()=>bs.map(b=>({k:'txt',a:b.s,b:b.e,tr:'vol',l:Math.round(b.vt*1000)+''})),
+    topup:()=>bs.filter(b=>b.topup).map(b=>({k:'band',a:b.topup,b:b.e,l:'volume 보충'})),
+    ring:(tr,l)=>bs.map(b=>({k:'ring',t:b.s+0.03,tr,l})),
+    states:()=>{const out=[];let s=null;for(const b of breaths){const key=b.kind==='pc'?'c':'s';if(!s||s.key!==key){if(s)out.push(s);s={key,a:b.s,b:b.e}}else s.b=b.e}if(s)out.push(s);
+      return out.map(r=>({k:'band',a:r.a,b:r.b,l:r.key==='c'?'Control (PRVC)':'Support (VS)',c:r.key==='c'?'info':'ok'}))}
+  };
+}
+
+/* ---------- annotation builders ---------- */
+function annCtx(sim){
+  const {efforts,breaths,t0,t1}=sim, inW=t=>t>=t0+0.05&&t<=t1-0.05, out=[];
+  const effEnd=e=>e.s+e.Ti;
+  return {
+    missed(lbl){efforts.filter(e=>!e.trig&&!e.inInsp&&inW(e.s+e.Ti*0.6)).forEach(e=>out.push({k:'ring',t:e.s+e.Ti*0.55,tr:'flow',l:lbl}));
+      efforts.filter(e=>!e.trig&&!e.inInsp&&inW(e.s+e.Ti*0.6)).forEach(e=>out.push({k:'ring',t:e.s+e.Ti*0.55,tr:'paw',l:''}));return out},
+    delay(){breaths.filter(b=>b.eff&&inW(b.s)&&b.s-b.eff.s>0.15).forEach(b=>out.push({k:'band',a:b.eff.s,b:b.s,l:'delay '+Math.round((b.s-b.eff.s)*1000)+'ms'}));return out},
+    auto(){breaths.filter(b=>b.type==='auto'&&inW(b.s)).forEach(b=>out.push({k:'ring',t:b.s,tr:'paw',l:'effort 없음'}));return out},
+    starve(){breaths.filter(b=>inW(b.s)).forEach(b=>out.push({k:'band',a:b.s,b:b.s+0.45,l:'scooped'}));return out},
+    premature(){breaths.filter(b=>b.eff&&inW(b.e)&&effEnd(b.eff)>b.e+0.1).forEach(b=>out.push({k:'band',a:b.e,b:effEnd(b.eff),l:'환자 아직 흡기'}));return out},
+    double(){for(let i=1;i<breaths.length;i++){const a=breaths[i-1],b=breaths[i];if(inW(b.s)&&b.eff&&b.eff===a.eff)out.push({k:'band',a:a.s,b:b.e,l:'effort 1 = breath 2'})}return out},
+    delayed(){breaths.filter(b=>b.eff&&inW(b.e)&&b.e>effEnd(b.eff)+0.08).forEach(b=>{out.push({k:'band',a:effEnd(b.eff),b:b.e,l:'환자 멈춤'});out.push({k:'ring',t:b.e-0.02,tr:'paw',l:'spike'});out.push({k:'ring',t:effEnd(b.eff)+0.12,tr:'flow',l:'knee'})});return out},
+    reverse(){efforts.filter(e=>e.entrained&&inW(e.s)).forEach(e=>out.push({k:'ring',t:e.s+0.25,tr:'paw',l:'기계→환자'}));
+      for(let i=1;i<breaths.length;i++){const a=breaths[i-1],b=breaths[i];if(b.type==='trig'&&inW(b.s)&&b.eff&&b.eff.entrained)out.push({k:'band',a:a.s,b:b.e,l:'stacked'})}return out}
+  };
+}
+
+/* ---------- drawing ---------- */
+const cv=document.getElementById('cv'),ctx=cv.getContext('2d');
+const TR=[
+  {key:'PAW',lbl:'Paw',unit:'cmH₂O',col:'#F2C94C',tr:'paw'},
+  {key:'FLOW',lbl:'Flow',unit:'L/min',col:'#6FCF97',tr:'flow',zero:true},
+  {key:'VOL',lbl:'Volume',unit:'mL',col:'#56CCF2',tr:'vol'},
+  {key:'PM',lbl:'Pmus',unit:'cmH₂O',col:'#EB8CE0',tr:'pm',zero:true,opt:true},
+  {key:'EA',lbl:'EAdi',unit:'µV',col:'#FF9F43',tr:'ea',zero:true,ea:true}
+];
+let st={tab:'atlas',idx:0,aidx:0,lung:'normal',ann:true,pmus:false,sim:null,prog:1,quiz:null,score:[0,0]};
+const mq=matchMedia('(prefers-reduced-motion: reduce)');
+
+function range(arr,i0,i1,zero){let mn=Infinity,mx=-Infinity;for(let i=i0;i<i1;i++){if(arr[i]<mn)mn=arr[i];if(arr[i]>mx)mx=arr[i]}
+  if(zero){mn=Math.min(mn,0);mx=Math.max(mx,0)}const pad=(mx-mn)*0.12||1;return [mn-pad,mx+pad]}
+function draw(){
+  const sim=st.sim;if(!sim)return;
+  const dpr=Math.max(1,window.devicePixelRatio||1),W=cv.clientWidth;
+  const traces=TR.filter(t=>t.ea?!!sim.EA:(!t.opt||st.pmus)), rowH=(W<520?92:112)*(st.tab==='hold'?1.3:1), H=rowH*traces.length+20;
+  cv.style.height=H+'px';cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,W,H);
+  const {T,t0,t1}=sim;let i0=T.findIndex(t=>t>=t0);const i1=T.length;
+  const L=46,Rr=8,x=t=>L+(t-t0)/(t1-t0)*(W-L-Rr);
+  const tcut=t0+(t1-t0)*st.prog;
+  // time grid
+  ctx.font='10px ui-monospace,Menlo,monospace';
+  const stp=Math.max(1,Math.ceil(30/((W-L-Rr)/(t1-t0))));for(let s=Math.ceil(t0);s<=t1;s+=stp){ctx.strokeStyle='#141C2E';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x(s),0);ctx.lineTo(x(s),H-16);ctx.stroke();
+    ctx.fillStyle='#55617A';ctx.fillText((s-t0).toFixed(0)+'s',x(s)-6,H-4)}
+  const ys={};
+  traces.forEach((tr,k)=>{
+    const top=k*rowH+6,bot=top+rowH-14,[mn,mx]=range(sim[tr.key],i0,i1,tr.zero||tr.key==='VOL');
+    const y=v=>bot-(v-mn)/(mx-mn)*(bot-top);ys[tr.tr]={y,top,bot};
+    ctx.fillStyle=tr.col;ctx.font='600 11px -apple-system,system-ui,sans-serif';ctx.fillText(tr.lbl,4,top+11);
+    ctx.fillStyle='#55617A';ctx.font='9px ui-monospace,Menlo,monospace';ctx.fillText(tr.unit,4,top+23);
+    ctx.fillText(mx.toFixed(0),24,top+9>bot?top:top+33);
+    if(tr.zero||tr.key==='PAW'){const ref=tr.key==='PAW'?sim.p.PEEP:0;ctx.setLineDash([3,4]);ctx.strokeStyle='#2A3550';ctx.beginPath();ctx.moveTo(L,y(ref));ctx.lineTo(W-Rr,y(ref));ctx.stroke();ctx.setLineDash([]);
+      ctx.fillStyle='#55617A';ctx.fillText(tr.key==='PAW'?'PEEP':'0',L-26,y(ref)+3)}
+    ctx.strokeStyle=tr.col;ctx.lineWidth=1.8;ctx.lineJoin='round';ctx.beginPath();let first=true;
+    for(let i=i0;i<i1;i++){if(T[i]>tcut)break;const X=x(T[i]),Y=y(sim[tr.key][i]);first?ctx.moveTo(X,Y):ctx.lineTo(X,Y);first=false}
+    ctx.stroke();
+  });
+  if(st.prog<1)return;
+  if(st.ann&&st.showAnn){
+    const anns=st.tab==='adv'?ADV[st.aidx].ann(advCtx(sim)):st.tab==='hold'?(sim.hold&&HOLD[st.hidx].ann?HOLD[st.hidx].ann(sim.M,sim.p):[]):S[st.idx].ann(annCtx(sim));
+    anns.forEach(a=>{
+      if(a.k==='band'){const xa=Math.max(L,x(a.a)),xb=Math.min(W-Rr,x(a.b));if(xb<=xa)return;const cc=a.c==='info'?[90,140,255]:a.c==='ok'?[93,203,145]:[255,107,107];
+        ctx.fillStyle=`rgba(${cc},0.14)`;ctx.fillRect(xa,0,xb-xa,H-16);
+        ctx.strokeStyle=`rgba(${cc},0.6)`;ctx.lineWidth=1;ctx.strokeRect(xa+.5,.5,xb-xa-1,H-17);
+        ctx.fillStyle=`rgb(${cc})`;ctx.font='600 10px -apple-system,system-ui,sans-serif';ctx.fillText(a.l,xa+3,H-22)}
+      if(a.k==='ring'){const r=ys[a.tr];if(!r)return;const idx=nearest(T,a.t),X=x(T[idx]),key=KEY[a.tr],Y=r.y(sim[key][idx]);
+        ctx.strokeStyle='#FF6B6B';ctx.lineWidth=2;ctx.beginPath();ctx.arc(X,Y,11,0,Math.PI*2);ctx.stroke();
+        if(a.l){ctx.fillStyle='#FF8E8E';ctx.font='600 10px -apple-system,system-ui,sans-serif';const w=ctx.measureText(a.l).width;ctx.fillText(a.l,Math.min(W-Rr-w,Math.max(L,X-w/2)),(Y-15>r.top+22)?Y-15:Y+25)}}
+      if(a.k==='txt'){const r=ys[a.tr];if(!r)return;const key=KEY[a.tr];let j0=nearest(T,a.a),j1=nearest(T,a.b),mx=-Infinity;for(let j=j0;j<=j1;j++)mx=Math.max(mx,sim[key][j]);
+        const Y=Math.max(r.top+9,r.y(mx)-5);ctx.font='600 10px ui-monospace,Menlo,monospace';const w=ctx.measureText(a.l).width,X=Math.min(W-Rr-w,Math.max(L,x((a.a+a.b)/2)-w/2));
+        ctx.fillStyle='rgba(7,11,20,.75)';ctx.fillRect(X-2,Y-9,w+4,12);ctx.fillStyle='#E8EEF9';ctx.fillText(a.l,X,Y)}
+      if(a.k==='lvl'){const r=ys[a.tr];if(!r||a.v==null)return;const Y=r.y(a.v),xa=Math.max(L,x(a.a)),xb=Math.min(W-Rr,x(a.b));if(xb<=xa)return;
+        ctx.strokeStyle=a.col;ctx.lineWidth=1.3;ctx.setLineDash([5,3]);ctx.beginPath();ctx.moveTo(xa,Y);ctx.lineTo(xb,Y);ctx.stroke();ctx.setLineDash([]);
+        ctx.font='700 10px -apple-system,system-ui,sans-serif';const w=ctx.measureText(a.l).width,lx=a.side==='l'?xa:Math.max(L,xb-w),ly=(!a.below&&Y-14>r.top)?Y-4:Y+13;
+        ctx.fillStyle='rgba(7,11,20,.82)';ctx.fillRect(lx-2,ly-9,w+4,12);ctx.fillStyle=a.col;ctx.fillText(a.l,lx,ly)}
+      if(a.k==='brk'){const r=ys[a.tr];if(!r||a.v1==null||a.v2==null)return;const X=x(a.t),y1=r.y(a.v1),y2=r.y(a.v2);
+        ctx.strokeStyle=a.col;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(X,y1);ctx.lineTo(X,y2);ctx.moveTo(X-4,y1);ctx.lineTo(X+4,y1);ctx.moveTo(X-4,y2);ctx.lineTo(X+4,y2);ctx.stroke();
+        ctx.font='700 10px -apple-system,system-ui,sans-serif';const w=ctx.measureText(a.l).width,lx=a.side==='l'?Math.max(L,X-6-w):Math.min(W-Rr-w,X+6),ly=(y1+y2)/2+4;
+        ctx.fillStyle='rgba(7,11,20,.82)';ctx.fillRect(lx-2,ly-9,w+4,12);ctx.fillStyle=a.col;ctx.fillText(a.l,lx,ly)}
+    });
+  }
+  if(sim.asv)drawASV(sim);
+}
+const KEY={paw:'PAW',flow:'FLOW',vol:'VOL',pm:'PM',ea:'EA'};
+function nearest(T,t){let lo=0,hi=T.length-1;while(hi-lo>1){const m=(lo+hi)>>1;T[m]<t?lo=m:hi=m}return lo}
+let raf;
+function animate(){cancelAnimationFrame(raf);if(mq.matches){st.prog=1;draw();return}
+  const t0=performance.now(),D=1400;const step=n=>{st.prog=Math.min(1,(n-t0)/D);draw();if(st.prog<1)raf=requestAnimationFrame(step)};raf=requestAnimationFrame(step)}
+
+/* ---------- UI ---------- */
+const $=s=>document.querySelector(s);
+
+/* ---------- Hold 측정: simulator + 설명 + 계산기 ---------- */
+st.hidx=0;st.cv={};
+function simHold(cfg){
+  const p=Object.assign({mode:'VC',R:12,C:0.04,PEEP:5,Vt:0.45,P:15,Ti:0.9,RR:15,Rexp:2,rise:0.05,warm:8,from:0,dur:8,ih:null,eh:null,eff:null,occ:null,zoom:false},cfg);
+  const dt=0.004,per=60/p.RR,segs=[];let t=-p.warm*per;
+  for(let k=-p.warm;t<p.dur+1;k++){
+    segs.push({k,ty:'insp',a:t,b:t+p.Ti});t+=p.Ti;
+    if(p.ih&&k===p.ih.n){segs.push({k,ty:'ih',a:t,b:t+p.ih.d});t+=p.ih.d}
+    segs.push({k,ty:'exp',a:t,b:t+per-p.Ti});t+=per-p.Ti;
+    if(p.eh&&k===p.eh.n){segs.push({k,ty:'eh',a:t,b:t+p.eh.d});t+=p.eh.d}
+  }
+  const effs=[];
+  if(p.eff)segs.filter(s=>s.ty==='insp').forEach(s=>effs.push({s:s.a-0.04,Ti:p.eff.Ti,A:p.eff.A}));
+  const ehs=segs.find(s=>s.ty==='eh');if(p.occ&&ehs)effs.push({s:ehs.a+p.occ.delay,Ti:p.occ.Ti,A:p.occ.A});
+  const pmAt=t=>{let v=0;for(const e of effs){const u=t-e.s;if(u<0||u>e.Ti+0.4)continue;v+=u<e.Ti?e.A*Math.sin(Math.PI/2*u/e.Ti):e.A*Math.cos(Math.PI/2*(u-e.Ti)/0.4)}return v};
+  let T=[],PAW=[],FLOW=[],VOL=[],PM=[];const M={};let V=0,paw=p.PEEP,pend=p.PEEP,si=0,i=0;
+  for(t=segs[0].a;t<p.dur;i++,t=segs[0].a+i*dt){
+    while(t>=segs[si].b)si++;
+    const s=segs[si],u=t-s.a,pm=pmAt(t),Palv=p.PEEP+V/p.C-pm;let flow;
+    if(s.ty==='insp'){
+      if(p.mode==='VC'){flow=p.Vt/p.Ti;paw=Palv+p.R*flow}
+      else{const cmd=p.PEEP+p.P*Math.min(1,u/p.rise);flow=Math.max(0,(cmd-Palv)/p.R);paw=flow>0?cmd:Palv}
+      pend=paw;
+    }else if(s.ty==='ih'){flow=0;paw=Palv+(pend-Palv)*Math.exp(-u/0.05)}
+    else if(s.ty==='exp'){flow=(p.PEEP-Palv)/(p.R+p.Rexp);paw=p.PEEP-p.Rexp*flow;pend=paw}
+    else{flow=0;paw=pend+(Palv-pend)*(1-Math.exp(-u/0.12))}
+    V+=flow*dt;
+    if(t>=p.from){
+      if(i%2===0){T.push(t);PAW.push(paw);FLOW.push(flow*60);VOL.push(V*1000);PM.push(pm)}
+      if(s.ty==='insp'&&(!p.ih||s.k===p.ih.n))M.ppeak=Math.max(M.ppeak??-99,paw);
+      if(s.ty==='ih'){M.pplat=paw;M.ih=[s.a,s.b]}
+      if(s.ty==='exp'&&p.eh&&s.k===p.eh.n)M.expEnd=s.b;
+      if(s.ty==='eh'){M.eh=[s.a,s.b];
+        if(!p.occ||u<p.occ.delay)M.peeptot=paw;
+        else{M.occS=s.a+p.occ.delay;if(paw<(M.pmin??99)){M.pmin=paw;M.tmin=t}if(M.p01==null&&u>=p.occ.delay+0.1)M.p01=M.peeptot-paw}}
+    }
+  }
+  if(M.pmin!=null)M.pocc=M.pmin-M.peeptot;
+  M.vt=p.mode==='VC'?p.Vt*1000:Math.max(...VOL)-Math.min(...VOL);
+  let t0=p.from,t1=p.dur;
+  if(p.zoom&&M.occS!=null){t0=M.occS-0.3;t1=M.occS+1.0;const k=[];T.forEach((x,j)=>{if(x>=t0&&x<=t1)k.push(j)});const f=a=>k.map(j=>a[j]);T=f(T);PAW=f(PAW);FLOW=f(FLOW);VOL=f(VOL);PM=f(PM)}
+  return {p,T,PAW,FLOW,VOL,PM,efforts:[],breaths:[],t0,t1,hold:true,M};
+}
+const r0=v=>v==null?'–':Math.round(v)+'',r1=v=>v==null?'–':(Math.round(v*10)/10).toFixed(1);
+const HOLD=[
+{id:'ih-vc',name:'Insp hold',sub:'Pplat · ΔP',en:'End-inspiratory occlusion (VC 예시)',
+ cfg:{mode:'VC',R:15,C:0.04,PEEP:5,Vt:0.45,Ti:0.9,RR:15,ih:{n:1,d:1.5},from:-0.4,dur:7.8},
+ one:'흡기 끝에 flow를 0으로 멈추면 저항 성분(R × flow)이 빠지고, 남는 압력 Pplat이 폐포압이야.',
+ btn:['흡기가 시작될 때 우하단 <b>Insp. hold</b> 하드키를 꾹 누르고 있기 (최대 30초)','압력이 평평해지면(0.5–2초) 손 떼기','<b>Additional values</b> → Pplat, Cstatic','환자가 passive해야 정확. hold 중 압력이 출렁이면 버리고 다시'],
+ watch:['Ppeak → Pplat으로 뚝 떨어지는 폭 = 저항 성분 (파란 막대)','Pplat − PEEP = ΔP, 순수 탄성 압력 (초록 막대)','hold 동안 flow 0, volume 그대로'],
+ fx:['ΔP = Pplat − PEEPtot','Cstat = Vt ÷ ΔP','Rinsp = (Ppeak − Pplat) ÷ flow','※ Rinsp는 VC square flow에서만 정확'],
+ vals:[['Pplat','≤ 25','여유 있음','ok'],['Pplat','26–30','허용 상한, ΔP와 같이 판단','warn'],['Pplat','> 30','overdistension 위험 → Vt↓, PEEP 재검토 (비만·복압↑은 흉벽 성분일 수 있음)','bad'],
+   ['ΔP','≤ 14','양호','ok'],['ΔP','15','ARDS에서 흔히 쓰는 상한','warn'],['ΔP','> 15','ARDS 사망률↑ (Amato 2015) → Vt↓, PEEP 조정, prone','bad'],
+   ['Cstat','50–100','삽관 환자 정상 (mL/cmH₂O)','ok'],['Cstat','30–50','경도↓: 무기폐, 부종, 폐렴, 비만, 복부팽만','warn'],['Cstat','< 30','심한↓: ARDS baby lung, 긴장성 기흉, 대량 흉수','bad'],
+   ['Ppeak − Pplat','< 5','기도저항 정상','ok'],['Ppeak − Pplat','5–10','경도 저항↑: 분비물·tube 확인','warn'],['Ppeak − Pplat','> 10','저항↑: 기관지수축, 분비물, tube 꺾임·물기','bad']],
+ pit:'<b>Ppeak alarm 감별</b>: Ppeak만 ↑ = 저항 문제 (suction, 기관지확장제, tube). Ppeak·Pplat 둘 다 ↑ = compliance 문제 (기흉, 무기폐, 부종 악화, 편측 삽관).',
+ ann:(M,p)=>[{k:'band',a:M.ih[0],b:M.ih[1],l:'Insp hold',c:'info'},
+   {k:'lvl',tr:'paw',v:M.ppeak,a:M.ih[0]-0.9,b:M.ih[0]+0.4,l:'Ppeak '+r0(M.ppeak),col:'#F2C94C',side:'l'},
+   {k:'lvl',tr:'paw',v:M.pplat,a:M.ih[0],b:M.ih[1]+1.3,l:'Pplat '+r0(M.pplat),col:'#FF9F43',side:'r',below:true},
+   {k:'brk',tr:'paw',t:M.ih[0]+0.55,v1:M.pplat,v2:M.ppeak,l:'R 성분 '+r0(M.ppeak-M.pplat),col:'#8FA8FF',side:'r'},
+   {k:'brk',tr:'paw',t:M.ih[1]-0.15,v1:p.PEEP,v2:M.pplat,l:'ΔP '+r0(M.pplat-p.PEEP),col:'#5DCB91',side:'l'},
+   {k:'ring',t:M.ih[0]+0.7,tr:'flow',l:'flow 0'}]},
+{id:'ih-pc',name:'Insp hold',sub:'PCV',en:'PCV에서 Ppeak ≈ Pplat 인 경우',
+ cfg:{mode:'PC',R:10,C:0.03,PEEP:5,P:15,Ti:1.0,RR:15,ih:{n:1,d:1.2},from:-0.4,dur:7.6},
+ one:'PCV는 흡기 flow가 Ti 안에 0까지 떨어지면 hold를 해도 압력이 거의 안 떨어져. 이때 Ppeak ≈ Pplat, ΔP ≈ PC above PEEP.',
+ btn:['방법은 VC와 같아: 흡기 때 <b>Insp. hold</b> 꾹 → 평평해지면 떼기','<b>Additional values</b> → Pplat, Cstatic','먼저 흡기 flow가 Ti 끝 전에 baseline(0)에 닿는지 눈으로 확인'],
+ watch:['흡기 flow가 Ti 끝 전에 0에 닿음 (빨간 원)','hold를 걸어도 Paw가 거의 그대로 → Ppeak ≈ Pplat','flow가 0에 못 닿으면(COPD, 짧은 Ti) Pplat < Ppeak → hold 필수'],
+ fx:['ΔP = PC above PEEP 인 조건','① 흡기 flow가 0 도달','② auto-PEEP 없음 (PEEPtot = set PEEP)','③ 환자 passive (자발 effort 없음)'],
+ vals:[['Vt / PBW','≤ 6.5','lung-protective (mL/kg)','ok'],['Vt / PBW','6.5–8','허용, ΔP·Pplat 같이 확인','warn'],['Vt / PBW','> 8','과다','bad'],
+   ['ΔP','≤ 14','양호','ok'],['ΔP','> 15','Vt↓ 또는 PEEP 조정','bad'],['Cstat','< 30','baby lung → Vt를 더 낮춰야 함','bad']],
+ pit:'자발 effort가 있으면 환자 근육 압력이 더해져서 실제 폐 stress는 기계 압력보다 커. 그때는 PC above PEEP ≠ ΔP → Pocc 칸 참고.',
+ ann:(M,p)=>[{k:'ring',t:M.ih[0]-0.06,tr:'flow',l:'Ti 끝 flow ≈ 0'},{k:'band',a:M.ih[0],b:M.ih[1],l:'Insp hold',c:'info'},
+   {k:'lvl',tr:'paw',v:M.pplat,a:M.ih[0]-1.0,b:M.ih[1]+0.9,l:'Ppeak '+r0(M.ppeak)+' ≈ Pplat '+r0(M.pplat),col:'#FF9F43',side:'r'},
+   {k:'brk',tr:'paw',t:M.ih[1]-0.15,v1:p.PEEP,v2:M.pplat,l:'ΔP '+r0(M.pplat-p.PEEP),col:'#5DCB91',side:'l'}]},
+{id:'eh',name:'Exp hold',sub:'auto-PEEP',en:'End-expiratory occlusion · intrinsic PEEP',
+ cfg:{mode:'VC',R:22,Rexp:2,C:0.06,PEEP:5,Vt:0.6,Ti:0.9,RR:26,eh:{n:0,d:2.0},ih:{n:1,d:1.2},from:-0.8,dur:7.4},
+ one:'호기 끝에 막으면 다 못 내쉬고 갇힌 공기의 압력이 드러나. PEEPtot − set PEEP = auto-PEEP.',
+ btn:['호기 끝(다음 흡기 직전)에 <b>Exp. hold</b> 하드키를 꾹 누르고 있기','평평해질 때까지 1–3초 (심한 COPD·천식은 3–5초)','<b>Additional values</b> → PEEPtot','진정 안 해도 hold 동안 환자가 힘 빼고 있으면 측정 가능 → plateau가 평평한지 확인'],
+ watch:['호기 flow가 0으로 안 돌아온 채 다음 흡기 시작 = auto-PEEP 신호 (빨간 원)','hold 하면 Paw가 set PEEP(점선)에서 PEEPtot까지 올라감','같은 환자 Insp hold: 진짜 ΔP = Pplat − PEEPtot. set PEEP으로 빼면 ΔP 과대평가'],
+ fx:['auto-PEEP = PEEPtot − set PEEP','ΔP = Pplat − PEEPtot (set PEEP 아님!)','Cstat = Vt ÷ (Pplat − PEEPtot)'],
+ vals:[['auto-PEEP','0–2','의미 없음','ok'],['auto-PEEP','2–5','경도: 호기 flow 확인, 추세 관찰','ok'],['auto-PEEP','5–10','의미 있음: trigger 실패·혈압 확인 → Te 확보','warn'],
+   ['auto-PEEP','> 10','적극 교정: 정맥환류↓, 저혈압, 기압외상','bad'],['auto-PEEP','> 15 + 저혈압','circuit 30–60초 분리해서 혈압 회복 보기','bad']],
+ pit:'<b>오염</b>: hold 중 흡기 effort → 과소평가, 복근으로 능동 호기 → 과대평가. <b>교정 순서</b>: RR↓ (1순위) → Vt↓ → Ti↓(flow↑), 기관지확장제·suction. COPD ineffective trigger면 ext PEEP을 auto-PEEP의 70–80%까지. 천식은 Pplat ≤ 30 + 혈압 안정이면 10 전후도 허용.',
+ ann:(M,p)=>[{k:'ring',t:M.expEnd-0.06,tr:'flow',l:'flow ≠ 0'},{k:'band',a:M.eh[0],b:M.eh[1],l:'Exp hold',c:'info'},
+   {k:'lvl',tr:'paw',v:M.peeptot,a:M.eh[0],b:M.ih[1]+0.6,l:'PEEPtot '+r0(M.peeptot),col:'#FF6B6B',side:'l'},
+   {k:'brk',tr:'paw',t:M.eh[0]+1.3,v1:p.PEEP,v2:M.peeptot,l:'auto-PEEP '+r0(M.peeptot-p.PEEP),col:'#FF6B6B',side:'r'},
+   {k:'band',a:M.ih[0],b:M.ih[1],l:'Insp hold',c:'info'},
+   {k:'lvl',tr:'paw',v:M.pplat,a:M.ih[0]-0.3,b:M.ih[1]+0.6,l:'Pplat '+r0(M.pplat),col:'#FF9F43',side:'r'},
+   {k:'brk',tr:'paw',t:M.ih[1]-0.15,v1:M.peeptot,v2:M.pplat,l:'진짜 ΔP '+r0(M.pplat-M.peeptot),col:'#5DCB91',side:'l'}]},
+{id:'pocc',name:'Pocc',sub:'effort',en:'Exp hold 중 환자 흡기 · occlusion pressure',pm:true,
+ cfg:{mode:'PC',R:10,C:0.04,PEEP:5,P:10,Ti:0.9,RR:18,eff:{A:6,Ti:0.8},eh:{n:0,d:2.2},occ:{A:16,Ti:0.8,delay:0.5},from:-0.4,dur:7.0},
+ one:'Exp hold 중 환자가 들이쉬면 Paw가 PEEP 아래로 떨어져. 그 최대 음압 swing = Pocc = 환자 흡기 effort 전체.',
+ btn:['자발호흡 중 호기 끝에 <b>Exp. hold</b> 꾹 누르기','환자가 한 번 들이쉴 때까지 유지','화면 freeze → PEEP 기준선에서 가장 깊은 지점까지 차이를 커서로 읽기','2–3회 평균'],
+ watch:['막혀서 flow 0, volume 변화 없음 → 근육 압력이 그대로 Paw에 찍힘','「환자 effort (Pmus)」를 켜면 Pocc 모양 = Pmus 모양','처음 100 ms 저하 = P0.1 (다음 칸에서 확대)'],
+ fx:['Pmus ≈ 0.75 × |Pocc|','ΔPL,dyn ≈ (Ppeak − PEEP) + ⅔ × |Pocc|','※ 막힌 상태 수축(isometric)이라 Pocc가 실제 Pmus보다 커서 보정 (Bertoni 2019)'],
+ vals:[['|Pocc|','< 6','effort 낮음: over-assist, 과진정 → 횡격막 위축','warn'],['|Pocc|','6–20','허용 범위 (Pmus 약 5–15)','ok'],['|Pocc|','> 20','effort 과다 (Pmus > 15): P-SILI, 횡격막 손상 → PS↑, 원인 교정','bad'],
+   ['ΔPL,dyn','≤ 15','양호','ok'],['ΔPL,dyn','> 15–20','자발호흡 포함 폐 stress 과다','bad']],
+ pit:'기계 ΔP가 10이어도 환자가 세게 당기면 실제 폐에는 20 넘는 stress가 걸려. <b>자발호흡 ARDS에서 꼭 확인.</b> P0.1(drive)↑인데 Pocc(effort)가 작으면 근력 약화 의심.',
+ ann:(M,p)=>[{k:'band',a:M.eh[0],b:M.eh[1],l:'Exp hold',c:'info'},
+   {k:'brk',tr:'paw',t:M.tmin,v1:M.peeptot,v2:M.pmin,l:'Pocc '+r0(M.pocc),col:'#EB8CE0',side:'r'},
+   {k:'ring',t:M.occS+0.1,tr:'paw',l:'P0.1'},
+   {k:'lvl',tr:'paw',v:p.PEEP+p.P,a:M.eh[1],b:M.eh[1]+0.9,l:'Ppeak '+r0(M.ppeak),col:'#F2C94C',side:'r'}]},
+{id:'p01',name:'P0.1',sub:'drive',en:'Airway occlusion pressure at 100 ms (확대)',pm:true,
+ cfg:{mode:'PC',R:10,C:0.04,PEEP:5,P:10,Ti:0.9,RR:18,eff:{A:6,Ti:0.8},eh:{n:0,d:2.2},occ:{A:16,Ti:0.8,delay:0.5},from:-0.4,dur:7.0,zoom:true},
+ one:'흡기 시작 후 100 ms 시점의 압력 저하. 환자가 막힌 걸 알아채기 전이라 순수 호흡중추 drive가 찍혀.',
+ btnT:'측정 (기종별)',
+ btn:['<b>Servo-i</b>: 별도 버튼 없음. 환자가 trigger한 호흡에서 <b>Additional values → P0.1</b> 표시 (Quick access엔 없음)','<b>Hamilton</b> Tools → P0.1 · <b>Dräger</b> Special procedures → P0.1 · <b>PB 980</b> RM maneuvers → P0.1','자발 trigger 필수: passive PC/PRVC면 PS·CPAP로 잠깐 바꾸기','3–4회 평균 (호흡마다 변동 큼)'],
+ watch:['초록 구간 = effort 시작 후 100 ms','그 시점에 PEEP 아래로 떨어진 값 = P0.1','그 뒤 계속 떨어지는 전체 폭 = Pocc (effort)'],
+ fx:['P0.1 = PEEP − Paw(t = 100 ms)','100 ms 안에는 의식적 반응 없음','flow 0 → mechanics·근력 영향 적음'],
+ vals:[['P0.1','< 1.0','drive 매우 낮음: 과진정, PS 과다, 대사성 알칼리증, 과환기','bad'],['P0.1','1.0–1.5','낮은 편: 추세 관찰, support 약간↓','warn'],['P0.1','1.5–3.5','적정','ok'],
+   ['P0.1','3.5–5','drive 높음: under-assist, 통증, 불안·섬망, 발열, 산증 → 원인 교정 → PS↑','warn'],['P0.1','> 5','매우 높음: P-SILI·횡격막 손상 위험. SBT 실패 예측 (> 4–6)','bad']],
+ pit:'<b>P0.1 = drive, Pocc = effort.</b> auto-PEEP이 있으면 과소평가. 기종마다 측정 방식이 달라서 같은 환자는 같은 기계로 추세를 봐.',
+ ann:(M,p)=>[{k:'band',a:M.occS,b:M.occS+0.1,l:'100 ms',c:'ok'},
+   {k:'brk',tr:'paw',t:M.occS+0.1,v1:M.peeptot,v2:M.peeptot-M.p01,l:'P0.1 '+r1(M.p01),col:'#5DCB91',side:'r'},
+   {k:'brk',tr:'paw',t:M.tmin,v1:M.peeptot,v2:M.pmin,l:'Pocc '+r0(M.pocc),col:'#EB8CE0',side:'l'}]},
+{id:'calc',name:'계산기',sub:'침상용',calc:true}
+];
+function holdHTML(h){
+  const list=a=>`<ul>${a.map(x=>`<li>${x}</li>`).join('')}</ul>`;
+  return `<div class="title"><h2>${h.name}</h2><span class="en">${h.en}</span><span class="tag">${h.sub}</span></div>
+  <p class="one">${h.one}</p>
+  <div class="how"><b>${h.btnT||'Servo-i 버튼'}</b>${list(h.btn)}</div>
+  <div class="cols">
+    <div class="sec"><h3>이 파형에서 볼 것</h3>${list(h.watch)}</div>
+    <div class="sec"><h3>공식</h3><div class="fx">${h.fx.map(x=>`<div>${x}</div>`).join('')}</div></div>
+  </div>
+  <div class="sec"><h3>수치 의미</h3><div class="tblw"><table class="tbl"><thead><tr><th>지표</th><th>값</th><th>의미</th></tr></thead><tbody>
+  ${h.vals.map(v=>`<tr><td>${v[0]}</td><td><span class="lv ${v[3]}"></span>${v[1]}</td><td>${v[2]}</td></tr>`).join('')}</tbody></table></div></div>
+  ${h.pit?`<div class="pit">${h.pit}</div>`:''}`;
+}
+const CF=[['pk','Ppeak','cmH₂O'],['pl','Pplat','cmH₂O'],['pe','set PEEP','cmH₂O'],['pt','PEEPtot','cmH₂O'],['vt','Vt (VTe)','mL'],['bw','PBW','kg'],['oc','Pocc swing','cmH₂O'],['p01','P0.1','cmH₂O']];
+function calcHTML(){
+  return `<div class="title"><h2>침상 계산기</h2><span class="en">hold 값 넣으면 바로 해석</span></div>
+  <p class="one">Additional values에서 읽은 값을 넣어. 있는 값만 넣으면 계산 가능한 것만 나와.</p>
+  <div class="calc-in" id="calc">${CF.map(([id,l,u])=>`<label>${l} <small>${u}</small><input id="c_${id}" type="number" inputmode="decimal" step="any" autocomplete="off" value="${st.cv[id]??''}"></label>`).join('')}</div>
+  <div class="res" id="res"></div>
+  <div class="nav"><button type="button" class="btn" data-creset="1">초기화</button><span></span></div>
+  <p class="hint">ΔP는 PEEPtot이 있으면 PEEPtot 기준, 없으면 set PEEP 기준. Pocc는 부호 상관없이 swing 크기로 넣어. 기준치는 대략적인 값이야.</p>`;
+}
+function calcRender(){
+  const el=$('#res');if(!el)return;
+  const g=k=>{const v=parseFloat(st.cv[k]);return isFinite(v)?v:null};
+  const pk=g('pk'),pl=g('pl'),pe=g('pe'),pt=g('pt'),vt=g('vt'),bw=g('bw'),oc=g('oc'),p01=g('p01'),peep=pt??pe,R=[];
+  const add=(nm,v,u,lv,ms,d=0)=>R.push(`<div class="res-row ${lv}"><span class="nm">${nm}</span><b>${d?r1(v):r0(v)}<small>${u}</small></b><span class="ms">${ms}</span></div>`);
+  if(pt!=null&&pe!=null){const a=pt-pe;add('auto-PEEP',a,'cmH₂O',a<=5?'ok':a<=10?'warn':'bad',a<2?'의미 없음':a<=5?'경도: 호기 flow·추세 확인':a<=10?'의미 있음: trigger 실패·혈압 확인 → RR↓, Te↑':'적극 교정: RR↓·Vt↓, 저혈압이면 circuit 분리',1)}
+  if(pl!=null)add('Pplat',pl,'cmH₂O',pl<=25?'ok':pl<=30?'warn':'bad',pl<=25?'여유 있음':pl<=30?'허용 상한':'> 30: overdistension 위험 → Vt↓',1);
+  if(pl!=null&&peep!=null){const dp=pl-peep;add('ΔP',dp,'cmH₂O',dp<=14?'ok':dp<=15?'warn':'bad',(dp<=14?'양호':dp<=15?'ARDS 상한':'> 15: Vt↓, PEEP 조정, prone 고려')+(pt==null?' · set PEEP 기준 (PEEPtot 넣으면 정확)':''),1);
+    if(vt!=null&&dp>0){const c=vt/dp;add('Cstat',c,'mL/cmH₂O',c>=50?'ok':c>=30?'warn':'bad',c>=50?'정상 범위':c>=30?'경도 감소':'심한 감소: baby lung → Vt 더 낮추기')}}
+  if(pk!=null&&pl!=null){const d=pk-pl;add('Ppeak − Pplat',d,'cmH₂O',d<5?'ok':d<=10?'warn':'bad',d<5?'기도저항 정상':d<=10?'경도 저항↑':'저항↑: suction, 기관지확장제, tube 확인',1)}
+  if(vt!=null&&bw){const k=vt/bw;add('Vt / PBW',k,'mL/kg',k<=6.5?'ok':k<=8?'warn':'bad',k<=6.5?'lung-protective':k<=8?'허용, ΔP·Pplat 같이 확인':'과다',1)}
+  if(oc!=null){const o=Math.abs(oc);add('Pmus 추정',0.75*o,'cmH₂O',o<6?'warn':o<=20?'ok':'bad',o<6?'effort 낮음: over-assist·과진정':o<=20?'허용 범위':'effort 과다: P-SILI 위험 → PS↑, 원인 교정',1);
+    if(pk!=null&&peep!=null){const d=(pk-peep)+2/3*o;add('ΔPL,dyn',d,'cmH₂O',d<=15?'ok':d<=20?'warn':'bad',d<=15?'자발호흡 포함 폐 stress 양호':d<=20?'경계':'폐 stress 과다',1)}}
+  if(p01!=null)add('P0.1',p01,'cmH₂O',p01<1?'bad':p01<1.5?'warn':p01<=3.5?'ok':p01<=5?'warn':'bad',p01<1?'drive 매우 낮음: 과진정, PS 과다':p01<1.5?'낮은 편':p01<=3.5?'적정':p01<=5?'drive 높음: under-assist, 통증, 산증':'매우 높음: P-SILI 위험',1);
+  el.innerHTML=R.length?R.join(''):'<p class="hint">값을 넣으면 여기에 해석이 나와.</p>';
+}
+function loadHold(i){st.hidx=i;const h=HOLD[i];if(!h.calc){st.pmus=!!h.pm;st.sim=simHold(h.cfg)}render();if(!h.calc)animate()}
+document.addEventListener('input',e=>{const el=e.target;if(el&&el.id&&el.id.startsWith('c_')){st.cv[el.id.slice(2)]=el.value;calcRender()}});
+function readout(sim){
+  if(sim&&sim.hold){const p=sim.p,M=sim.M;
+    let h=`<span>${p.mode==='VC'?`Vt ${Math.round(p.Vt*1000)} · PEEP ${p.PEEP} · RR ${p.RR}`:`PC ${p.P} / PEEP ${p.PEEP} · Ti ${p.Ti}s · RR ${p.RR}`}</span>`;
+    h+=`<span>Ppeak <b>${r0(M.ppeak)}</b></span>`;if(M.pplat!=null)h+=`<span>Pplat <b>${r0(M.pplat)}</b></span>`;
+    if(M.peeptot!=null)h+=`<span>PEEPtot <b>${r0(M.peeptot)}</b></span>`;if(M.pocc!=null)h+=`<span class="hid">Pocc <b>${r0(M.pocc)}</b></span>`;
+    if(M.p01!=null)h+=`<span class="hid">P0.1 <b>${r1(M.p01)}</b></span>`;h+=`<span>Vt <b>${Math.round(M.vt)}</b> mL</span>`;
+    $('#mode').textContent=p.mode==='VC'?'VC (A/C)':'PC (A/C)';$('#readout').innerHTML=h;return}
+  if(sim.adv){const e=ADV[st.aidx],p=sim.p,bs=sim.breaths.filter(b=>b.s>=sim.t0&&b.s<sim.t1),es=sim.efforts.filter(x=>x.s>=sim.t0&&x.s<sim.t1);
+    const rr=Math.round(bs.length*60/(sim.t1-sim.t0)),vt=Math.round(bs.reduce((a,b)=>a+(b.vt||0),0)/Math.max(1,bs.length)*1000);
+    let h=`<span>${e.set(p)}</span><span>RR <b>${rr}</b></span><span>Vt <b>${vt}</b> mL</span>`;
+    if(st.pmus||sim.EA)h+=`<span class="hid">환자 effort <b>${Math.round(es.length*60/(sim.t1-sim.t0))}</b>/min</span>`;
+    $('#mode').textContent=e.name;$('#readout').innerHTML=h;return}
+  const p=sim.p,bs=sim.breaths.filter(b=>b.s>=sim.t0&&b.s<sim.t1),es=sim.efforts.filter(e=>e.s>=sim.t0&&e.s<sim.t1);
+  const rr=Math.round(bs.length*60/(sim.t1-sim.t0)),vt=Math.round(bs.reduce((a,b)=>a+(b.vt||0),0)/Math.max(1,bs.length)*1000);
+  const set=p.mode==='PSV'?`PS ${p.P} / PEEP ${p.PEEP} · ETS ${Math.round(p.ETS*100)}%`:`Pinsp ${p.P} / PEEP ${p.PEEP} · Ti ${p.Ti}s · RR ${p.RR}`;
+  let h=`<span>${set}</span><span>RR <b>${rr}</b></span><span>Vt <b>${vt}</b> mL</span>`;
+  if(st.pmus) h+=`<span class="hid">환자 effort <b>${Math.round(es.length*60/(sim.t1-sim.t0))}</b>/min</span>`;
+  $('#mode').textContent=p.mode==='PSV'?'PSV':'PCV (A/C)';$('#readout').innerHTML=h;
+}
+function chips(){
+  $('#chips').hidden=st.tab==='quiz';
+  if(st.tab==='hold'){$('#chips').innerHTML=HOLD.map((s,i)=>`<button type="button" class="chip${i===st.hidx?' on':''}" data-h="${i}">${s.name}<small>${s.sub}</small></button>`).join('');const on=$('#chips .on');if(on)on.scrollIntoView({inline:'center',block:'nearest'});return}
+  if(st.tab==='adv'){$('#chips').innerHTML=ADV.map((s,i)=>`<button type="button" class="chip${i===st.aidx?' on':''}" data-a="${i}">${s.name}</button>`).join('');const on=$('#chips .on');if(on)on.scrollIntoView({inline:'center',block:'nearest'});return}
+  $('#chips').innerHTML=S.map((s,i)=>`<button type="button" class="chip${i===st.idx?' on':''}" data-i="${i}">${s.name}<small>${s.mode}</small></button>`).join('');
+  const on=$('#chips .on');if(on)on.scrollIntoView({inline:'center',block:'nearest'});
+}
+function infoHTML(s){
+  const list=(a,tag='ul')=>a.length?`<${tag}>${a.map(x=>`<li>${x}</li>`).join('')}</${tag}>`:'';
+  return `<div class="title"><h2>${s.name}</h2><span class="en">${s.en}</span><span class="tag">${s.mode}</span></div>
+  <p class="one">${s.one}</p>
+  <div class="cols">
+    <div class="sec"><h3>파형 단서</h3>${list(s.clues)}</div>
+    ${s.cause.length?`<div class="sec"><h3>원인</h3>${list(s.cause)}</div>`:''}
+    ${s.fix.length?`<div class="sec fix"><h3>대처 (순서대로)</h3>${list(s.fix,'ol')}</div>`:''}
+  </div>
+  ${s.pit?`<div class="pit">${s.pit}</div>`:''}`;
+}
+function render(){
+  document.querySelectorAll('.seg button').forEach(b=>b.classList.toggle('on',b.dataset.tab===st.tab));
+  chips();
+  $('#tgAnn').classList.toggle('on',st.ann);$('#tgPmus').classList.toggle('on',st.pmus);
+  readout(st.sim);
+  $('#asvBox').hidden=!(st.tab==='adv'&&ADV[st.aidx].lung);
+  $('.monitor').hidden=st.tab==='hold'&&!!HOLD[st.hidx].calc;
+  if(st.tab==='hold'){
+    st.showAnn=true;const e=HOLD[st.hidx];
+    $('#info').innerHTML=(e.calc?calcHTML():holdHTML(e))+`<div class="nav"><button type="button" class="btn" data-hnav="-1" ${st.hidx===0?'disabled':''}>← 이전</button><button type="button" class="btn go" data-hnav="1" ${st.hidx===HOLD.length-1?'disabled':''}>다음 →</button></div>`;
+    if(e.calc)calcRender();
+    return;
+  }
+  if(st.tab==='adv'){
+    st.showAnn=true;const e=ADV[st.aidx];
+    $('#info').innerHTML=advHTML(e)+`<div class="nav"><button type="button" class="btn" data-anav="-1" ${st.aidx===0?'disabled':''}>← 이전</button><button type="button" class="btn go" data-anav="1" ${st.aidx===ADV.length-1?'disabled':''}>다음 →</button></div>`;
+    if(e.lung)$('#lungs').innerHTML=Object.entries(LUNG).map(([k,v])=>`<button type="button" class="tg${st.lung===k?' on':''}" data-lung="${k}">${v.l} (RCexp ${(v.R*v.C).toFixed(1)}s)</button>`).join('');
+    return;
+  }
+  if(st.tab==='atlas'){
+    st.showAnn=true;
+    $('#info').innerHTML=infoHTML(S[st.idx])+`<div class="nav"><button type="button" class="btn" data-nav="-1" ${st.idx===0?'disabled':''}>← 이전</button><button type="button" class="btn go" data-nav="1" ${st.idx===S.length-1?'disabled':''}>다음 →</button></div>`;
+  }else{
+    const q=st.quiz;st.showAnn=q.answered;
+    let h=`<div class="nav" style="align-items:center"><p class="quizq">이 파형의 이상은?</p><span class="score">${st.score[0]} / ${st.score[1]}</span></div>
+    <div class="choices">${q.opts.map(i=>{let c='';if(q.answered){if(i===q.idx)c=' right';else if(i===q.pick)c=' wrong'}return `<button type="button" class="choice${c}" data-pick="${i}" ${q.answered?'disabled':''}>${S[i].name}</button>`}).join('')}</div>`;
+    if(!q.answered)h+=`<p class="hint">힌트: 「환자 effort (Pmus)」를 켜면 실제 모니터에는 없는 환자 근육 신호가 보여.</p>`;
+    else h+=infoHTML(S[q.idx])+`<div class="nav"><span></span><button type="button" class="btn go" data-next="1">다음 문제 →</button></div>`;
+    $('#info').innerHTML=h;
+  }
+}
+function load(i){st.idx=i;st.sim=simulate(S[i].cfg);render();animate()}
+function loadAdv(i){st.aidx=i;const e=ADV[i];st.pmus=e.pm;const c=Object.assign({},e.cfg,e.lung?LUNG[st.lung]:{});st.sim=simAdv(c);render();animate()}
+function advHTML(e){
+  const list=a=>`<ul>${a.map(x=>`<li>${x}</li>`).join('')}</ul>`;
+  return `<div class="title"><h2>${e.name}</h2><span class="en">${e.en}</span></div>
+  <p class="one">${e.one}</p>
+  <div class="sec"><h3>이 파형에서 볼 것</h3>${list(e.watch)}</div>
+  <div class="how"><b>작동 원리</b>${list(e.how)}</div>
+  <div class="cols">
+    <div class="sec good"><h3>적응증</h3>${list(e.indic)}</div>
+    <div class="sec bad"><h3>금기 · 피할 때</h3>${list(e.contra)}</div>
+    <div class="sec"><h3>한계 · 함정</h3>${list(e.limits)}</div>
+    <div class="sec"><h3>모니터링</h3>${list(e.mon)}</div>
+    <div class="sec fix"><h3>Weaning 지표</h3>${list(e.wean)}</div>
+  </div>`;
+}
+function drawASV(sim){
+  const cvA=document.getElementById('asv'),c=cvA.getContext('2d'),a=sim.asv,dpr=Math.max(1,devicePixelRatio||1),W=cvA.clientWidth,H=200;
+  cvA.style.height=H+'px';cvA.width=Math.round(W*dpr);cvA.height=Math.round(H*dpr);c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,W,H);
+  const L=46,B=H-22,T0=8,Rr=10,fMax=Math.max(40,a.fmax+5),vMax=a.vtMax*1000*1.1;
+  const X=f=>L+f/fMax*(W-L-Rr),Y=v=>B-v/vMax*(B-T0);
+  c.strokeStyle='#1B2438';c.lineWidth=1;c.font='9px ui-monospace,Menlo,monospace';c.fillStyle='#55617A';
+  for(let f=0;f<=fMax;f+=10){c.beginPath();c.moveTo(X(f),T0);c.lineTo(X(f),B);c.stroke();c.fillText(f,X(f)-4,B+12)}
+  for(let v=0;v<=vMax;v+=200){c.beginPath();c.moveTo(L,Y(v));c.lineTo(W-Rr,Y(v));c.stroke();c.fillText(v,L-26,Y(v)+3)}
+  c.fillText('RR (/min)',W-Rr-52,B-4);c.save();c.translate(10,T0+60);c.rotate(-Math.PI/2);c.fillText('Vt (mL)',0,0);c.restore();
+  c.fillStyle='rgba(90,140,255,0.12)';c.strokeStyle='rgba(90,140,255,0.7)';
+  const bx=X(5),by=Y(a.vtMax*1000),bw=X(a.fmax)-X(5),bh=Y(a.vtMin*1000)-Y(a.vtMax*1000);c.fillRect(bx,by,bw,bh);c.strokeRect(bx,by,bw,bh);
+  c.strokeStyle='#8FA8FF';c.setLineDash([4,3]);c.beginPath();let first=true;for(let f=3;f<=fMax;f+=0.5){const v=a.MV/f*1000;if(v>vMax)continue;first?c.moveTo(X(f),Y(v)):c.lineTo(X(f),Y(v));first=false}c.stroke();c.setLineDash([]);
+  const bs=sim.breaths.filter(b=>b.s>=sim.t0&&b.e<sim.t1).slice(-4),rr=sim.breaths.filter(b=>b.s>=sim.t1-10).length*6,vt=bs.reduce((s,b)=>s+b.vt,0)/Math.max(1,bs.length)*1000;
+  c.strokeStyle='#6FCF97';c.lineWidth=2.5;const tx=X(a.f),ty=Y(a.Vt*1000);c.beginPath();c.moveTo(tx-7,ty);c.lineTo(tx+7,ty);c.moveTo(tx,ty-7);c.lineTo(tx,ty+7);c.stroke();
+  c.fillStyle='#F2C94C';c.beginPath();c.arc(X(rr),Y(vt),5,0,Math.PI*2);c.fill();
+  c.font='600 10px -apple-system,system-ui,sans-serif';c.fillStyle='#6FCF97';c.fillText('목표',tx+9,ty-6);c.fillStyle='#F2C94C';c.fillText('현재',X(rr)+8,Y(vt)+12);
+  c.fillStyle='#8FA8FF';c.fillText('안전 박스',bx+4,by+12);
+  $('#asvCap').innerHTML=`<span>목표 MV <b>${a.MV.toFixed(1)}</b> L/min</span><span>RCexp <b>${a.RCe.toFixed(2)}</b>s</span><span>목표 RR <b>${a.f.toFixed(0)}</b></span><span>목표 Vt <b>${Math.round(a.Vt*1000)}</b> mL</span>`;
+}
+function newQuiz(){
+  const pool=S.map((_,i)=>i);let idx;do{idx=pool[Math.floor(Math.random()*pool.length)]}while(st.quiz&&idx===st.quiz.idx);
+  const others=pool.filter(i=>i!==idx).sort(()=>Math.random()-.5).slice(0,3);
+  st.quiz={idx,opts:[idx,...others].sort(()=>Math.random()-.5),answered:false,pick:null};st.pmus=false;load(idx);
+}
+document.addEventListener('click',e=>{
+  const t=e.target.closest('button');if(!t)return;
+  if(t.dataset.tab){st.tab=t.dataset.tab;if(st.tab==='quiz')newQuiz();else if(st.tab==='adv')loadAdv(st.aidx);else if(st.tab==='hold')loadHold(st.hidx);else{st.pmus=false;load(st.idx)}return}
+  if(t.dataset.a!==undefined){loadAdv(+t.dataset.a);return}
+  if(t.dataset.anav){loadAdv(Math.min(ADV.length-1,Math.max(0,st.aidx+ +t.dataset.anav)));window.scrollTo({top:0,behavior:'smooth'});return}
+  if(t.dataset.lung){st.lung=t.dataset.lung;loadAdv(st.aidx);return}
+  if(t.dataset.h!==undefined){loadHold(+t.dataset.h);return}
+  if(t.dataset.hnav){loadHold(Math.min(HOLD.length-1,Math.max(0,st.hidx+ +t.dataset.hnav)));window.scrollTo({top:0,behavior:'smooth'});return}
+  if(t.dataset.creset){st.cv={};render();return}
+  if(t.dataset.i!==undefined){load(+t.dataset.i);return}
+  if(t.dataset.nav){load(Math.min(S.length-1,Math.max(0,st.idx+ +t.dataset.nav)));window.scrollTo({top:0,behavior:'smooth'});return}
+  if(t.dataset.pick!==undefined){const q=st.quiz;q.pick=+t.dataset.pick;q.answered=true;st.score[1]++;if(q.pick===q.idx)st.score[0]++;render();draw();return}
+  if(t.dataset.next){newQuiz();window.scrollTo({top:0,behavior:'smooth'});return}
+  if(t.id==='tgAnn'){st.ann=!st.ann;render();draw();return}
+  if(t.id==='tgPmus'){st.pmus=!st.pmus;render();draw();return}
+  if(t.id==='tgReplay'){animate();return}
+});
+let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(draw,120)});
+window.__S=S;window.__sim=simulate;window.__ADV=ADV;window.__simAdv=simAdv;
+load(0);
+
+})();
+</script>
+
+<a href="../index.html" id="gm-home" aria-label="홈으로" style="position:fixed;right:max(10px,env(safe-area-inset-right));top:calc(10px + env(safe-area-inset-top));z-index:99999;display:flex;align-items:center;gap:6px;padding:7px 11px;border-radius:999px;background:rgba(11,106,119,.92);color:#fff;font:600 12.5px/1 -apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;text-decoration:none;box-shadow:0 4px 14px rgba(0,0,0,.25);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)">
+<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>홈</a>
+<script>if('serviceWorker' in navigator) navigator.serviceWorker.register('../sw.js',{scope:'../'}).catch(()=>{});</script>
+</body>
+</html>
