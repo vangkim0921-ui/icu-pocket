@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Weaning</title>
+<link rel="manifest" href="../manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Weaning">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0E171B">
+<style>
+:root{
+  --bg:#F2F5F6; --surface:#FFFFFF; --ink:#13232B; --muted:#5A6A72; --line:#D5DDE0;
+  --accent:#0D6871; --accent-ink:#FFFFFF; --accent-soft:#E0EFF0;
+  --ok:#1C7A4B; --ok-soft:#E2F3E9; --bad:#B3261E; --bad-soft:#FBE8E6; --warn:#8F5B00; --warn-soft:#FBF0D8;
+  --sans:-apple-system, "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  --mono:ui-monospace, "SF Mono", Menlo, monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root{
+  --bg:#0E171B; --surface:#152229; --ink:#E3ECEE; --muted:#93A4AB; --line:#293A42;
+  --accent:#5EC0C8; --accent-ink:#0B1A1E; --accent-soft:#16383C;
+  --ok:#5DCB91; --ok-soft:#163325; --bad:#FF8B80; --bad-soft:#3C1E1B; --warn:#F1B84C; --warn-soft:#382C13; color-scheme:dark}}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.55;
+  padding-top:calc(env(safe-area-inset-top,0px) + 14px);padding-bottom:calc(env(safe-area-inset-bottom,0px) + 32px);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1000px;margin:0 auto;display:grid;gap:16px}
+header{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+h1{font-size:1.35rem;margin:0;font-weight:700}
+.tools{display:flex;gap:8px;align-items:center;flex:1 1 220px;justify-content:flex-end}
+input[type=text],input[type=number]{font:inherit;font-size:16px;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:7px 10px;min-width:0}
+#pt{flex:1 1 auto;max-width:200px}
+input[type=number]{width:76px;font-family:var(--mono)}
+input:focus-visible,button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.grid{display:grid;grid-template-columns:200px minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:760px){.grid{grid-template-columns:minmax(0,1fr)}}
+.rail{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px;position:sticky;top:12px}
+@media (max-width:760px){.rail{position:static;flex-direction:row;overflow-x:auto;gap:6px;padding-bottom:2px;scrollbar-width:none}}
+.stage{display:flex;gap:8px;align-items:center;padding:7px 10px;border-radius:8px;color:var(--muted);white-space:nowrap;font-size:.88rem;font-weight:600}
+@media (max-width:760px){.stage{flex:0 0 auto;border:1px solid var(--line);padding:5px 10px 5px 6px}}
+.dot{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-family:var(--mono);font-size:.7rem;border:1.5px solid var(--line);background:var(--surface);flex:none}
+.stage.current{background:var(--accent-soft);color:var(--ink)}
+.stage.current .dot{border-color:var(--accent);background:var(--accent);color:var(--accent-ink)}
+.stage.done{color:var(--ink)} .stage.done .dot{border-color:var(--ok);color:var(--ok)}
+.stage.fail{color:var(--ink)} .stage.fail .dot{border-color:var(--bad);background:var(--bad-soft);color:var(--bad)}
+.stage.skip .dot{border-style:dashed}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px;display:grid;gap:16px;min-width:0}
+@media (max-width:480px){.card{padding:16px 14px}}
+h2{font-size:1.2rem;margin:0;line-height:1.35}
+h3{font-size:.75rem;margin:0;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.block{display:grid;gap:8px}
+.checks{display:grid;gap:6px}
+.chk{display:grid;grid-template-columns:22px 1fr;gap:10px;align-items:start;padding:11px 12px;border:1px solid var(--line);border-radius:8px;cursor:pointer}
+.chk input{width:19px;height:19px;margin:2px 0 0;accent-color:var(--accent)}
+.chk.on{background:var(--accent-soft);border-color:var(--accent)}
+.checks.danger .chk input{accent-color:var(--bad)}
+.checks.danger .chk.on{background:var(--bad-soft);border-color:var(--bad)}
+.chk small{display:block;color:var(--muted);font-size:.8rem}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.opt{display:flex;gap:8px;align-items:center;padding:9px 12px;border:1px solid var(--line);border-radius:8px;cursor:pointer}
+.opt input{accent-color:var(--accent);margin:0}
+.opt.on{border-color:var(--accent);background:var(--accent-soft)}
+.field{display:flex;flex-direction:column;gap:3px;font-size:.75rem;color:var(--muted)}
+ul.plain{margin:0;padding-left:1.1em;display:grid;gap:3px}
+.note{font-size:.84rem;color:var(--muted);margin:0}
+.actions{display:flex;flex-wrap:wrap;gap:10px}
+button{font:inherit;font-weight:600;font-size:.95rem;border-radius:8px;padding:11px 16px;cursor:pointer;border:1.5px solid transparent}
+button:disabled{opacity:.35;cursor:not-allowed}
+.btn-go{background:var(--accent);color:var(--accent-ink)}
+.btn-ok{background:var(--ok);color:var(--surface)}
+.btn-bad{background:transparent;color:var(--bad);border-color:var(--bad)}
+.btn-bad.solid{background:var(--bad);color:var(--surface)}
+.btn-ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+.verdict{border-radius:10px;padding:13px 15px;display:grid;gap:4px}
+.verdict p{margin:0}
+.verdict.ok{background:var(--ok-soft)} .verdict.ok strong{color:var(--ok)}
+.verdict.bad{background:var(--bad-soft)} .verdict.bad strong{color:var(--bad)}
+.verdict.warn{background:var(--warn-soft)} .verdict.warn strong{color:var(--warn)}
+.timer{display:flex;flex-wrap:wrap;align-items:center;gap:14px;padding:12px 14px;border:1px solid var(--line);border-radius:10px}
+.timer .t{font-family:var(--mono);font-size:1.9rem;font-weight:600;font-variant-numeric:tabular-nums}
+.timer .bar{flex:1 1 140px;height:6px;border-radius:3px;background:var(--bg);overflow:hidden;border:1px solid var(--line)}
+.timer .bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .5s linear}
+.timer .lbl{font-size:.8rem;color:var(--muted)}
+.abcde{display:grid;gap:6px}
+.abcde div{display:grid;grid-template-columns:24px 1fr;gap:8px;padding:9px 12px;border:1px solid var(--line);border-radius:8px;font-size:.88rem}
+.abcde .k{font-family:var(--mono);font-weight:700;color:var(--accent)}
+details{border:1px solid var(--line);border-radius:8px;padding:9px 12px}
+summary{cursor:pointer;font-weight:600;font-size:.88rem}
+details[open] summary{margin-bottom:8px}
+.log ol{list-style:none;margin:0;padding:0;display:grid;gap:2px;font-size:.84rem}
+.log li{display:grid;grid-template-columns:46px 10px 1fr;gap:8px;align-items:baseline}
+.log time{font-family:var(--mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.log .m{width:8px;height:8px;border-radius:50%;background:var(--line)}
+.log .m.ok{background:var(--ok)} .log .m.bad{background:var(--bad)} .log .m.go{background:var(--accent)} .log .m.warn{background:var(--warn)}
+.empty{color:var(--muted);font-size:.84rem;margin:0}
+.kv{display:grid;grid-template-columns:max-content 1fr;gap:4px 16px;margin:0;font-size:.9rem}
+.kv dt{color:var(--muted)} .kv dd{margin:0;font-weight:600}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Weaning</h1>
+    <div class="tools">
+      <input type="text" id="pt" placeholder="환자 / Bed" autocomplete="off" aria-label="환자 또는 Bed">
+      <button class="btn-ghost" data-act="reset" type="button">새 환자</button>
+    </div>
+  </header>
+  <div class="grid">
+    <ol class="rail" id="rail" aria-label="단계"></ol>
+    <div style="display:grid;gap:16px;min-width:0">
+      <section class="card" id="main" aria-live="polite"></section>
+      <section class="card log" id="log"></section>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+const STAGES=[['screen','Screen'],['satsafe','SAT safety'],['sat','SAT'],['sbt','SBT'],['rest','Rest 1h'],['airway','Airway'],['post','발관 후']];
+const OUT={screen_fail:'screen',satsafe_hold:'satsafe',sat_fail:'sat',sbt_fail:'sbt',airway_hold:'airway',done:'post'};
+const fresh=()=>({view:'screen',stage:{},checks:{},log:[],attempt:1,days:0,sbtMethod:'psv',sbtDur:'30',sbtRunning:false,timer:null,stridorRisk:null,leak:null});
+let S=fresh();
+const $=s=>document.querySelector(s);
+const now=()=>{const d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')};
+const log=(msg,kind='go')=>S.log.push({t:now(),msg,kind});
+const ck=k=>S.checks[k]||(S.checks[k]=new Set());
+const n=k=>ck(k).size;
+const esc=s=>s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function checklist(step,items,danger){
+  return `<div class="checks${danger?' danger':''}">`+items.map((it,i)=>{
+    const id=`c-${step}-${i}`,on=ck(step).has(i),[a,b]=Array.isArray(it)?it:[it];
+    return `<label class="chk${on?' on':''}" for="${id}"><input type="checkbox" id="${id}" data-check="${step}" data-i="${i}"${on?' checked':''}><span>${a}${b?`<small>${b}</small>`:''}</span></label>`;
+  }).join('')+'</div>';
+}
+function radios(key,opts){
+  return '<div class="opts">'+opts.map(([v,l])=>{
+    const on=String(S[key])===v,id=`r-${key}-${v}`;
+    return `<label class="opt${on?' on':''}" for="${id}"><input type="radio" name="${key}" id="${id}" data-set="${key}" value="${v}"${on?' checked':''}>${l}</label>`;
+  }).join('')+'</div>';
+}
+const timerBlock=l=>`<div class="timer"><div><div class="t" id="timer">00:00</div><div class="lbl">${l}</div></div><div class="bar"><i id="tbar"></i></div><div class="lbl" id="tgoal"></div></div>`;
+const startTimer=min=>{S.timer={start:Date.now(),target:min*60}};
+function icc(){
+  if(S.attempt===1) return ['Simple weaning','첫 SBT에서 성공'];
+  if(S.attempt<=3&&S.days<=7) return ['Difficult weaning','SBT 2–3회 또는 첫 SBT 후 7일 이내'];
+  return ['Prolonged weaning','SBT 3회 이상 실패 또는 첫 SBT 후 7일 초과'];
+}
+const nextDayBtn=`<div class="actions"><button class="btn-go" data-act="nextDay" type="button">다음 날 재평가</button></div>`;
+
+const V={
+screen(){
+  const items=[['원인 질환 호전 또는 안정'],['P/F > 150','FiO₂ ≤ 0.4–0.5 · PEEP ≤ 8'],['혈역학 안정','승압제 없음 또는 소량'],['자발호흡 effort 있음'],['깨어 있거나 깨울 수 있음 · RR ≤ 35']];
+  return `<h2>Daily screen</h2>${checklist('screen',items)}
+  <p class="note">RSBI 불필요 · 하루 1회 오전</p>
+  <div class="actions"><button class="btn-go" data-act="screenPass" ${n('screen')===items.length?'':'disabled'} type="button">모두 충족</button>
+  <button class="btn-bad" data-act="screenFail" type="button">미충족</button></div>`;
+},
+screen_fail:()=>`<h2>오늘 SAT·SBT 보류</h2><div class="verdict warn"><strong>현재 지원 유지 · 원인 치료 후 내일 재평가</strong></div>${nextDayBtn}`,
+satsafe(){
+  const items=['Active seizure / 알코올 금단',['Agitation으로 진정제 증량 중','RASS ≥ +2'],'NMB 투여 중','24시간 내 심근허혈','ICP 상승','심한 혈역학 불안정','Complicated airway','Open chest / abdomen'];
+  const any=n('satsafe')>0;
+  return `<h2>SAT 금기 확인</h2><p class="note">해당하는 것만 체크</p>${checklist('satsafe',items,true)}
+  <div class="actions"><button class="btn-go" data-act="satsafePass" ${any?'disabled':''} type="button">해당 없음 → SAT</button>
+  <button class="btn-bad solid" data-act="satsafeHold" ${any?'':'disabled'} type="button">SAT 보류</button>
+  <button class="btn-ghost" data-act="noSedation" type="button">진정제 없음 → SBT</button></div>`;
+},
+satsafe_hold:()=>`<h2>SAT 보류</h2><div class="verdict warn"><strong>24시간 후 재평가</strong></div>${nextDayBtn}`,
+sat(){
+  const fails=[['불안·Agitation·통증 지속','RASS ≥ +2'],['RR > 35 또는 SpO₂ < 88%','5분 이상 지속'],'급성 부정맥',['호흡곤란 징후 2개 이상','빈맥·서맥, 보조호흡근, 복부 역호흡, 발한, 호흡곤란감']];
+  const any=n('sat')>0;
+  return `<h2>SAT</h2><ul class="plain"><li><b>진정제: 지속주입·PRN 모두 중단 (OFF)</b></li><li>진통제: 통증 있으면 진통 용량으로 유지</li><li>최대 4시간 관찰 · 깨면 RASS / CAM-ICU 평가</li></ul>
+  ${timerBlock('경과')}<div class="block"><h3>실패 기준</h3>${checklist('sat',fails,true)}</div>
+  <div class="actions"><button class="btn-ok" data-act="satPass" ${any?'disabled':''} type="button">통과 (말에 눈 뜸 또는 4h 무사고) → SBT</button>
+  <button class="btn-bad solid" data-act="satFail" ${any?'':'disabled'} type="button">실패</button></div>`;
+},
+sat_fail:()=>`<h2>SAT 실패</h2><div class="verdict bad"><strong>진정제 재개: 이전 용량의 1/2에서 시작 → 목표 RASS로 적정</strong></div>${nextDayBtn}`,
+sbt(){
+  if(!S.sbtRunning) return `<h2>SBT 설정</h2>
+    <div class="block"><h3>방식</h3>${radios('sbtMethod',[['psv','PSV 8 / PEEP 0'],['tpiece','T-piece (O₂ ≤ 6 L)']])}</div>
+    <div class="block"><h3>시간</h3>${radios('sbtDur',[['30','30분'],['120','120분 (고위험: 신경근질환·COPD 등)']])}</div>
+    <p class="note">FiO₂ 올리지 않음</p>
+    <div class="opts"><label class="field" for="attempt">SBT 회차<input type="number" id="attempt" min="1" value="${S.attempt}" data-num="attempt"></label>
+    <label class="field" for="days">첫 SBT 후 일수<input type="number" id="days" min="0" value="${S.days}" data-num="days"></label></div>
+    <details><summary>Advanced mode에서 전환</summary><ul class="plain">
+    <li><b>VS</b>: PEEP 5에서 지원압 ≤ 8</li><li><b>PAV+</b>: 20–30% assist에서 WOB 정상</li><li><b>ASV</b>: Pinsp 5–8, 거의 전부 자발호흡</li></ul></details>
+    <div class="actions"><button class="btn-go" data-act="sbtStart" type="button">SBT 시작</button></div>`;
+  const fails=['RR > 35','보조호흡근 사용 증가',['SpO₂ < 90% 지속','FiO₂ ≥ 0.4 또는 O₂ ≥ 6 L'],'HR > 140 지속','SBP < 90 또는 > 180 + 저관류','의식저하 / agitation'];
+  const any=n('sbt')>0;
+  return `<h2>SBT ${S.attempt}회차 · ${S.sbtMethod==='psv'?'PSV 8 / PEEP 0':'T-piece'} · ${S.sbtDur}분</h2>
+  ${timerBlock('경과')}<div class="block"><h3>실패 기준</h3>${checklist('sbt',fails,true)}</div>
+  <p class="note">시작 수 분 내 HR↑ BP↑ SpO₂↓ → WIPO 의심</p>
+  <div class="actions"><button class="btn-ok" data-act="sbtPass" ${any?'disabled':''} type="button">통과 → Rest 1h</button>
+  <button class="btn-bad solid" data-act="sbtFail" ${any?'':'disabled'} type="button">실패</button></div>`;
+},
+sbt_fail(){
+  const tr=(S.attempt>=3||S.days>7)?'Prolonged weaning':'Difficult weaning';
+  return `<h2>SBT ${S.attempt}회차 실패</h2><div class="verdict bad"><strong>이전 지원으로 복귀 · ${tr} 경로</strong></div>
+  <div class="block"><h3>원인 감별</h3><div class="abcde">
+  <div><span class="k">A</span><span>Airway/Lung · 분비물, 기관지연축, auto-PEEP, 무기폐, 흉수</span></div>
+  <div><span class="k">B</span><span>Brain · 섬망, 과진정, 불안</span></div>
+  <div><span class="k">C</span><span>Cardiac · WIPO, 허혈, 수액과다 → LUS, BNP, E/e'</span></div>
+  <div><span class="k">D</span><span>Diaphragm · ICU-AW, 약한 기침, 저K·저P</span></div>
+  <div><span class="k">E</span><span>Endocrine/Metabolic · 전해질, 갑상선, 영양</span></div></div></div>
+  <p class="note">Dyssynchrony 지속 시 PAV+ / NAVA 고려</p>
+  <div class="actions"><button class="btn-go" data-act="nextDayAttempt" type="button">다음 날 재평가 (SBT ${S.attempt+1}회차)</button></div>`;
+},
+rest:()=>`<h2>Rest 1h</h2><p class="note">SBT 전 세팅으로 재연결</p>${timerBlock('경과')}
+  <div class="actions"><button class="btn-go" data-act="restDone" type="button">완료 → Airway</button><button class="btn-bad" data-act="restWorse" type="button">악화</button></div>`,
+airway(){
+  const items=['의식 명료 · 명령 수행','기침 충분','분비물 조절 가능'];
+  const ready=n('airway')===items.length&&(S.stridorRisk==='no'||(S.stridorRisk==='yes'&&S.leak));
+  let lk='';
+  if(S.stridorRisk==='yes'){lk=`<div class="block"><h3>Cuff leak test</h3>${radios('leak',[['pass','통과'],['fail','실패']])}</div>`;
+    if(S.leak==='fail') lk+=`<div class="verdict warn"><strong>전신 스테로이드 투여 후 ≥ 4시간 뒤 발관</strong></div>`;}
+  return `<h2>Airway</h2>${checklist('airway',items)}
+  <div class="block"><h3>Stridor 고위험</h3>${radios('stridorRisk',[['no','아니오'],['yes','예']])}</div>${lk}
+  <div class="actions"><button class="btn-ok" data-act="airwayPass" ${ready?'':'disabled'} type="button">발관</button>
+  <button class="btn-bad" data-act="airwayHold" type="button">발관 보류</button></div>`;
+},
+airway_hold:()=>`<h2>발관 보류</h2><div class="verdict warn"><strong>기도 보호 불충분 · 원인 교정 후 재평가</strong></div>${nextDayBtn}`,
+post(){
+  const items=['> 65세','만성 심장질환','만성 호흡기질환 (COPD 등)','SBT 중 고탄산혈증'];
+  const c=ck('post'),hyper=c.has(2)||c.has(3),risk=c.size>0||S.attempt>1;
+  const rec=hyper?['예방적 NIV','COPD / 고탄산혈증']:risk?['HFNC 또는 NIV','재삽관 고위험'+(S.attempt>1?' (SBT 실패 이력)':'')]:['일반 산소 또는 HFNC','위험인자 없음'];
+  return `<h2>발관 후 산소</h2><div class="block"><h3>위험인자</h3>${checklist('post',items)}</div>
+  <div class="verdict ok"><strong>${rec[0]}</strong><p>${rec[1]}</p></div>
+  <div class="actions"><button class="btn-go" data-act="finish" type="button">발관 완료</button></div>`;
+},
+done(){
+  const [g,gd]=icc(),pt=$('#pt').value.trim();
+  return `<h2>발관 완료${pt?' · '+esc(pt):''}</h2><div class="verdict ok"><strong>${g}</strong><p>${gd}</p></div>
+  <dl class="kv"><dt>SBT 회차</dt><dd>${S.attempt}</dd><dt>첫 SBT 후</dt><dd>${S.days}일</dd><dt>방식</dt><dd>${S.sbtMethod==='psv'?'PSV 8 / PEEP 0':'T-piece'} · ${S.sbtDur}분</dd></dl>
+  <div class="actions"><button class="btn-ghost" data-act="reset" type="button">새 환자</button></div>`;
+}
+};
+
+const el=()=>{if(!S.timer)return'';const s=Math.floor((Date.now()-S.timer.start)/1000);return `${Math.floor(s/60)}분 ${s%60}초`};
+const go=v=>{S.view=v;render();window.scrollTo({top:0})};
+const A={
+  screenPass(){S.stage.screen='done';log('Screen 통과','ok');go('satsafe')},
+  screenFail(){S.stage.screen='fail';log('Screen 미충족','bad');go('screen_fail')},
+  satsafePass(){S.stage.satsafe='done';log('SAT 시작 (진정제 OFF)');startTimer(240);go('sat')},
+  satsafeHold(){S.stage.satsafe='fail';log('SAT 금기, 보류','bad');go('satsafe_hold')},
+  noSedation(){S.stage.satsafe='skip';S.stage.sat='skip';log('진정제 없음, SAT 생략','warn');go('sbt')},
+  satPass(){S.stage.sat='done';log(`SAT 통과 (${el()})`,'ok');S.timer=null;go('sbt')},
+  satFail(){S.stage.sat='fail';log('SAT 실패, 진정제 1/2 용량 재개','bad');S.timer=null;go('sat_fail')},
+  sbtStart(){S.sbtRunning=true;startTimer(+S.sbtDur);log(`SBT ${S.attempt}회차 시작 · ${S.sbtMethod==='psv'?'PSV 8/PEEP 0':'T-piece'}`);render()},
+  sbtPass(){S.stage.sbt='done';S.sbtRunning=false;log(`SBT 통과 (${el()})`,'ok');startTimer(60);go('rest')},
+  sbtFail(){S.stage.sbt='fail';S.sbtRunning=false;log(`SBT 실패 (${el()})`,'bad');S.timer=null;go('sbt_fail')},
+  restDone(){S.stage.rest='done';log('Rest 1h 완료','ok');S.timer=null;go('airway')},
+  restWorse(){S.stage.rest='fail';log('Rest 중 악화','bad');S.timer=null;go('sbt_fail')},
+  airwayPass(){S.stage.airway='done';log('Airway 통과'+(S.leak==='fail'?' · 스테로이드 후 발관':''),'ok');go('post')},
+  airwayHold(){S.stage.airway='fail';log('발관 보류','bad');go('airway_hold')},
+  finish(){S.stage.post='done';log('발관 완료 · '+icc()[0],'ok');go('done')},
+  nextDay(){newDay(false)}, nextDayAttempt(){newDay(true)},
+  reset(){S=fresh();$('#pt').value='';render()}
+};
+function newDay(inc){
+  S=Object.assign(fresh(),{log:S.log,attempt:S.attempt+(inc?1:0),days:S.days+1,sbtMethod:S.sbtMethod,sbtDur:S.sbtDur});
+  log(`재평가 (첫 SBT 후 ${S.days}일)`,'warn');go('screen');
+}
+function render(){
+  const cur=OUT[S.view]||S.view;
+  $('#rail').innerHTML=STAGES.map(([id,l],i)=>{
+    let st=S.stage[id]||''; if(id===cur&&S.view===id&&!st) st='current'; else if(id===cur&&S.view===id) st+=' current';
+    const mk=st.includes('fail')?'✕':st.includes('done')?'✓':st.includes('skip')?'–':i+1;
+    return `<li class="stage ${st}"><span class="dot">${mk}</span>${l}</li>`;
+  }).join('');
+  const f=document.activeElement&&document.activeElement.id;
+  $('#main').innerHTML=V[S.view]();
+  if(f){const e=document.getElementById(f);if(e)e.focus({preventScroll:true})}
+  $('#log').innerHTML='<h3>로그</h3>'+(S.log.length?`<ol>${S.log.map(l=>`<li><time>${l.t}</time><span class="m ${l.kind}"></span><span>${l.msg}</span></li>`).join('')}</ol>`:'<p class="empty">기록 없음</p>');
+  const cs=document.querySelector('.stage.current'); if(cs&&cs.scrollIntoView&&innerWidth<=760) cs.scrollIntoView({inline:'center',block:'nearest'});
+  tick();
+}
+function tick(){
+  const t=document.getElementById('timer'); if(!t||!S.timer) return;
+  const s=Math.floor((Date.now()-S.timer.start)/1000);
+  t.textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
+  const p=Math.min(100,s/S.timer.target*100);
+  document.getElementById('tbar').style.width=p+'%';
+  document.getElementById('tgoal').textContent=p>=100?'목표 도달':`목표 ${Math.round(S.timer.target/60)}분`;
+}
+setInterval(tick,1000);
+document.addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(b&&!b.disabled&&A[b.dataset.act])A[b.dataset.act]()});
+document.addEventListener('change',e=>{
+  const t=e.target;
+  if(t.dataset.check){const s=ck(t.dataset.check),i=+t.dataset.i;t.checked?s.add(i):s.delete(i);render()}
+  else if(t.dataset.set){S[t.dataset.set]=t.value;if(t.dataset.set==='stridorRisk')S.leak=null;render()}
+  else if(t.dataset.num){S[t.dataset.num]=Math.max(+t.min||0,parseInt(t.value,10)||0)}
+});
+render();
+
+})();
+</script>
+
+<a href="../index.html" id="gm-home" aria-label="홈으로" style="position:fixed;right:max(10px,env(safe-area-inset-right));top:calc(10px + env(safe-area-inset-top));z-index:99999;display:flex;align-items:center;gap:6px;padding:7px 11px;border-radius:999px;background:rgba(11,106,119,.92);color:#fff;font:600 12.5px/1 -apple-system,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;text-decoration:none;box-shadow:0 4px 14px rgba(0,0,0,.25);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)">
+<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>홈</a>
+<script>if('serviceWorker' in navigator) navigator.serviceWorker.register('../sw.js',{scope:'../'}).catch(()=>{});</script>
+</body>
+</html>
